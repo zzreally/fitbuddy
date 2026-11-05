@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f766e">
+<title>燃卡教练 · 热量与训练计数</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --bg:#f4f6f5; --card:#ffffff; --ink:#1c2b2a; --sub:#5f7472;
+  --acc:#0f766e; --acc2:#14b8a6; --red:#dc2626; --orange:#ea580c; --green:#16a34a;
+  --line:#e2e8e6; --chip:#eef4f3;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif;
+  max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:calc(96px + env(safe-area-inset-bottom));font-size:16px}
+header{background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 18px 14px;display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:19px;font-weight:700}
+header .date{font-size:13px;opacity:.85}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#fff;border-top:1px solid var(--line);
+  display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:50}
+nav button{flex:1;background:none;border:none;font-size:11px;color:var(--sub);padding:4px 0;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button .ic{font-size:21px;line-height:1}
+nav button.on{color:var(--acc);font-weight:700}
+.view{display:none;padding:14px}
+.view.on{display:block}
+.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card h2{font-size:15px;margin-bottom:10px;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+.card h2 .tag{font-size:12px;color:var(--acc);font-weight:600}
+.big-num{font-size:32px;font-weight:800;font-variant-numeric:tabular-nums}
+.row{display:flex;gap:10px;align-items:center}
+.row.between{justify-content:space-between}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stat{background:var(--chip);border-radius:12px;padding:10px;text-align:center}
+.stat .lb{font-size:11px;color:var(--sub)}
+.stat .v{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+.v.red{color:var(--red)} .v.green{color:var(--green)} .v.orange{color:var(--orange)}
+button.btn{border:none;border-radius:12px;background:var(--acc);color:#fff;font-size:16px;font-weight:700;padding:13px 16px;width:100%}
+button.btn.ghost{background:var(--chip);color:var(--acc)}
+button.btn.warn{background:var(--orange)}
+button.btn.danger{background:var(--red)}
+button.btn:active{opacity:.75}
+.chip{display:inline-flex;align-items:center;background:var(--chip);color:var(--acc);border-radius:999px;padding:7px 13px;font-size:13px;margin:0 6px 6px 0;border:1px solid transparent}
+.chip b{margin-left:4px;font-weight:700}
+input,select{border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;font-size:16px;width:100%;background:#fff;color:var(--ink)}
+input:focus{outline:none;border-color:var(--acc)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+.ring-wrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 2px}
+.ring-txt{margin-top:-118px;text-align:center;pointer-events:none}
+.ring-txt .t1{font-size:22px;font-weight:800}
+.ring-txt .t2{font-size:12px;color:var(--sub);margin-top:2px}
+.meal-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.meal-item:last-child{border-bottom:none}
+.meal-item .nm{font-size:15px}
+.meal-item .mt{font-size:11px;color:var(--sub)}
+.meal-item .kc{font-weight:700;font-variant-numeric:tabular-nums}
+.meal-item .del{color:#c94; font-size:18px;padding:4px 8px;background:none;border:none}
+.train-card{display:flex;justify-content:space-between;align-items:center;background:var(--card);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);border:none;width:100%;text-align:left}
+.train-card .tn{font-size:17px;font-weight:700}
+.train-card .td{font-size:12px;color:var(--sub);margin-top:3px}
+.train-card .go{font-size:22px;color:var(--acc)}
+.rep-num{font-size:76px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;line-height:1.1;margin:8px 0}
+.rep-sub{text-align:center;color:var(--sub);font-size:14px;margin-bottom:10px}
+.leg-tag{display:inline-block;border-radius:999px;padding:3px 14px;font-size:14px;font-weight:700;background:var(--chip);color:var(--acc);margin:0 3px}
+.leg-tag.on{background:var(--acc);color:#fff}
+.setdots{display:flex;justify-content:center;gap:7px;margin:10px 0}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--line)}
+.dot.done{background:var(--acc)}
+.dot.cur{background:var(--orange)}
+.timer-big{font-size:64px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;margin:10px 0}
+.modal-mask{position:fixed;inset:0;background:rgba(15,35,33,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
+.modal-mask.on{display:flex}
+.modal{background:#fff;border-radius:18px;padding:22px;width:100%;max-width:360px}
+.modal h3{font-size:17px;margin-bottom:8px}
+.modal p{font-size:14px;color:var(--sub);margin-bottom:12px}
+.toast{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#1c2b2a;color:#fff;
+  padding:11px 20px;border-radius:999px;font-size:14px;z-index:200;display:none;max-width:90%;text-align:center}
+.hist-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;font-variant-numeric:tabular-nums}
+.hist-row:last-child{border:none}
+.hist-row .d{color:var(--sub);width:88px}
+.seg{display:flex;background:var(--chip);border-radius:10px;padding:3px}
+.seg button{flex:1;border:none;background:none;padding:8px;border-radius:8px;font-size:14px;color:var(--sub)}
+.seg button.on{background:#fff;color:var(--acc);font-weight:700}
+.small-note{font-size:12px;color:var(--sub);line-height:1.6;margin-top:8px}
+.banner{background:#fef3c7;border:1px solid #fbbf24;color:#92400e;border-radius:12px;padding:11px 14px;font-size:13px;margin-bottom:12px;display:none}
+.banner.on{display:block}
+hr.sep{border:none;border-top:1px dashed var(--line);margin:12px 0}
+.workout-log-item{font-size:13px;color:var(--sub);padding:6px 0;border-bottom:1px dashed var(--line)}
+.workout-log-item b{color:var(--ink)}
+summary{list-style:none}
+summary::-webkit-details-marker{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>燃卡教练 🔥</h1>
+  <div class="date" id="hdrDate"></div>
+</header>
+
+<!-- ========== 总览 ========== -->
+<div class="view on" id="v-home">
+  <div class="banner" id="banner"></div>
+  <div class="card" id="watchFillCard" style="display:none;background:#fff7ed;border:1px solid #fdba74">
+    <h2 style="margin-bottom:8px">⌚ 今天还没填 Watch 活动能量</h2>
+    <div class="row" style="gap:8px">
+      <button class="btn" onclick="fillFromClipboard()">📋 从剪贴板一键填入</button>
+      <button class="btn ghost" onclick="switchView('v-burn')">手动输</button>
+    </div>
+    <p class="small-note" style="margin-top:6px">配好快捷指令后：每晚自动复制 → 打开App点一下，2 秒搞定</p>
+  </div>
+  <div class="card">
+    <h2>7700 千卡减脂周期 <span class="tag" id="cycleDoneTag"></span></h2>
+    <div class="ring-wrap">
+      <svg width="190" height="190" viewBox="0 0 190 190">
+        <circle cx="95" cy="95" r="80" fill="none" stroke="#e2e8e6" stroke-width="16"/>
+        <circle id="ringFg" cx="95" cy="95" r="80" fill="none" stroke="#0f766e" stroke-width="16"
+          stroke-linecap="round" stroke-dasharray="502.65" stroke-dashoffset="502.65" transform="rotate(-90 95 95)"/>
+      </svg>
+      <div class="ring-txt">
+        <div class="t1" id="ringPct">0%</div>
+        <div class="t2" id="ringSub">已累积 0 千卡缺口</div>
+      </div>
+    </div>
+    <p class="small-note" style="text-align:center" id="paceNote"></p>
+  </div>
+
+  <div class="card">
+    <h2>今日能量账本</h2>
+    <div class="grid3">
+      <div class="stat"><div class="lb">摄入</div><div class="v" id="tIntake">0</div></div>
+      <div class="stat"><div class="lb">消耗 TDEE</div><div class="v" id="tTdee">0</div></div>
+      <div class="stat"><div class="lb">热量缺口</div><div class="v" id="tDeficit">0</div></div>
+    </div>
+    <hr class="sep">
+    <div class="row between" style="font-size:13px;color:var(--sub)">
+      <span>基础代谢 <b id="tBmr" style="color:var(--ink)">—</b></span>
+      <span>Watch 活动消耗 <b id="tWatch" style="color:var(--ink)">0</b> 千卡</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>周期结算</h2>
+    <p class="small-note" style="margin-top:0">每天打开 App 自动结算前一天：缺口累进周期，满 <b>7700 千卡</b>（≈1kg 脂肪）自动提醒并开启新周期。</p>
+    <div class="row" style="margin-top:10px">
+      <button class="btn ghost" id="btnSettle">手动结算 / 校准</button>
+      <button class="btn ghost" id="btnNotif">开启提醒通知</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 饮食 ========== -->
+<div class="view" id="v-diet">
+  <div class="card">
+    <h2>记一餐</h2>
+    <input id="foodSearch" placeholder="🔍 吃了啥？搜一下，如 鸡蛋 / 拿铁 / 黄焖鸡" style="font-size:17px">
+    <div id="foodResults" style="margin-top:8px"></div>
+    <div id="adjustBar" style="display:none;margin-top:10px;background:var(--chip);border-radius:12px;padding:10px 12px">
+      <div class="row between">
+        <b id="adjName" style="font-size:14px;flex:1">—</b>
+        <span id="adjKcal" style="font-weight:800;font-size:20px;margin:0 10px"></span>
+      </div>
+      <div class="row" style="gap:6px;margin-top:6px">
+        <button class="btn ghost" style="width:auto;flex:1;padding:9px 0" onclick="adjustLast(-0.25)">－¼份</button>
+        <button class="btn ghost" style="width:auto;flex:1;padding:9px 0" onclick="adjustLast(0.25)">＋¼份</button>
+        <button class="btn ghost" style="width:auto;flex:1;padding:9px 0" onclick="adjustLast(0.5)">＋½份</button>
+        <button class="btn ghost" style="width:auto;flex:1;padding:9px 0" onclick="adjustLast(0,'del')">✕ 删</button>
+      </div>
+      <p class="small-note" style="margin:6px 0 0">实际吃的量不一样？按份加减，热量自动跟着变</p>
+    </div>
+    <hr class="sep">
+    <label style="font-size:12px;color:var(--sub)">🤲 家常炒菜/自己做的菜 —— 拳头估算（点＋累计）</label>
+    <div id="handBtns" style="margin-top:6px"></div>
+    <hr class="sep">
+    <label style="font-size:12px;color:var(--sub)">整餐拿不准？一键估一份</label>
+    <div style="margin-top:6px" id="mealChips"></div>
+    <hr class="sep">
+    <details>
+      <summary style="font-size:13px;color:var(--acc)">搜不到？直接输千卡</summary>
+      <div class="row" style="gap:8px;margin-top:10px">
+        <input id="foodKcal" type="number" inputmode="decimal" placeholder="多少千卡？" style="flex:1;font-size:20px;font-weight:800">
+        <input id="foodName" placeholder="叫啥（可选）" style="flex:1">
+        <button class="btn" style="width:auto;padding:11px 16px" onclick="addMeal()">记上</button>
+      </div>
+    </details>
+    <hr class="sep">
+    <label style="font-size:12px;color:var(--sub)">常用（点击直接记一餐，长按可删除）</label>
+    <div id="favChips" style="margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <h2>今日餐单 <span class="tag" id="dietTotalTag">合计 0 千卡</span></h2>
+    <div id="mealList"></div>
+  </div>
+</div>
+
+<!-- ========== 消耗 ========== -->
+<div class="view" id="v-burn">
+  <div class="card">
+    <h2>Apple Watch 活动能量（今日）</h2>
+    <div class="row" style="gap:8px">
+      <input id="watchInput" type="number" inputmode="decimal" placeholder="从手表「活动」App 抄过来">
+      <button class="btn" style="width:auto;padding:11px 18px" onclick="saveWatch()">保存</button>
+    </div>
+    <div class="row" style="margin-top:8px;gap:8px">
+      <button class="btn ghost" onclick="bumpWatch(100)">+100</button>
+      <button class="btn ghost" onclick="bumpWatch(200)">+200</button>
+      <button class="btn ghost" onclick="bumpWatch(300)">+300</button>
+      <button class="btn" onclick="fillFromClipboard()">📋 剪贴板填入</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>基础代谢 BMR</h2>
+    <div class="grid3">
+      <div class="field"><label>性别</label>
+        <div class="seg" id="sexSeg"><button data-s="m" class="on">男</button><button data-s="f">女</button></div>
+      </div>
+      <div class="field"><label>年龄</label><input id="pAge" type="number" inputmode="numeric"></div>
+      <div class="field"><label>体重 kg</label><input id="pWeight" type="number" inputmode="decimal"></div>
+    </div>
+    <div class="field"><label>身高 cm</label><input id="pHeight" type="number" inputmode="numeric"></div>
+    <div class="field"><label>静息心率（手表「心脏」App 查看，也作为训练组间恢复判定基准）</label><input id="pRhr" type="number" inputmode="numeric"></div>
+    <p class="small-note">TDEE（每日总消耗）= BMR + Watch 活动能量。Mifflin-St Jeor 公式估算 BMR，静息心率越低心肺越好、恢复越快，组间门槛默认用它参照。</p>
+  </div>
+</div>
+
+<!-- ========== 训练 ========== -->
+<div class="view" id="v-train">
+  <div id="trainList"></div>
+  <div id="trainSession" style="display:none"></div>
+  <div class="card" id="todayTrainLog">
+    <h2>今日训练记录</h2>
+    <div id="trainLogList"><p class="small-note" style="margin:0">今天还没练，选一个动作开练 💪</p></div>
+  </div>
+</div>
+
+<!-- ========== 历史 ========== -->
+<div class="view" id="v-hist">
+  <div class="card">
+    <h2>近 14 天</h2>
+    <div class="hist-row" style="color:var(--sub)"><span class="d">日期</span><span>摄入 / 消耗</span><span>缺口</span><span>训练</span></div>
+    <div id="histList"></div>
+  </div>
+  <div class="card">
+    <h2>已完成的减脂周期</h2>
+    <div id="histCycles" class="big-num" style="font-size:26px;text-align:center;color:var(--acc)">0 个</div>
+    <p class="small-note" style="text-align:center">每个周期 = 7700 千卡缺口 ≈ 减掉 1kg 脂肪</p>
+  </div>
+  <div class="card">
+    <h2>设置</h2>
+    <div class="row">
+      <button class="btn ghost" onclick="exportData()">导出数据(JSON)</button>
+      <button class="btn danger" onclick="resetAll()">清空全部数据</button>
+    </div>
+  </div>
+</div>
+
+<nav>
+  <button class="on" data-v="v-home"><span class="ic">📊</span>总览</button>
+  <button data-v="v-diet"><span class="ic">🍽️</span>饮食</button>
+  <button data-v="v-burn"><span class="ic">⌚</span>消耗</button>
+  <button data-v="v-train"><span class="ic">💪</span>训练</button>
+  <button data-v="v-hist"><span class="ic">📅</span>历史</button>
+</nav>
+
+<!-- 心率门槛弹窗 -->
+<div class="modal-mask" id="hrMask">
+  <div class="modal">
+    <h3>⏱️ 休息一下，等心率恢复</h3>
+    <p id="hrRestTime" style="font-size:26px;font-weight:800;color:var(--acc);text-align:center">0:00</p>
+    <p style="text-align:center">看一眼手表，当前心率是多少？<br>需降到 <b id="hrGateVal" style="color:var(--red)">100</b> 以下才能继续</p>
+    <input id="hrInput" type="number" inputmode="numeric" placeholder="当前心率，如 96" style="text-align:center;font-size:22px;font-weight:700">
+    <div class="row" style="gap:8px;margin-top:12px">
+      <button class="btn" onclick="submitHR()">心率达标，继续！</button>
+    </div>
+    <button class="btn ghost" style="margin-top:8px" onclick="skipHR()">跳过（今天不卡心率）</button>
+  </div>
+</div>
+
+<!-- 周期完成弹窗 -->
+<div class="modal-mask" id="cycleMask">
+  <div class="modal" style="text-align:center">
+    <h3 style="font-size:24px">🎉 恭喜！</h3>
+    <p style="font-size:16px">7700 千卡热量缺口已达成！<br>≈ 减掉 <b>1kg</b> 纯脂肪</p>
+    <div class="big-num" id="cycleCount" style="color:var(--acc);margin-bottom:10px">第 1 个周期</div>
+    <button class="btn" onclick="closeCycleModal()">开启新周期，继续！</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= 基础 ================= */
+const $=s=>document.querySelector(s);
+const K='fitbuddy_v1';
+const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fmtTime=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+
+let S;
+function load(){
+  try{S=JSON.parse(localStorage.getItem(K))||null}catch(e){S=null}
+  if(!S){
+    S={profile:{sex:'m',age:30,height:172,weight:75,rhr:60},
+       days:{}, cycle:{accum:0,done:0}, favs:[], lastSettled:null};
+  }
+  if(!S.favs)S.favs=[];
+  if(!S.cycle)S.cycle={accum:0,done:0};
+  if(!S.planDone)S.planDone={};
+}
+const save=()=>localStorage.setItem(K,JSON.stringify(S));
+const day=t=>{if(!S.days[t])S.days[t]={meals:[],watch:0,workouts:[]};return S.days[t]};
+function calcBmr(){
+  const p=S.profile;
+  if(p.bmrOverride)return p.bmrOverride;
+  const b=10*p.weight+6.25*p.height-5*p.age;
+  return Math.round(p.sex==='m'?b+5:b-161);
+}
+function dayTdee(t){const d=S.days[t]||{watch:0,meals:[]};return calcBmr()+(d.watch||0)}
+function dayIntake(t){return (S.days[t]?.meals||[]).reduce((a,m)=>a+m.kcal,0)}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2200)}
+
+/* ================= 周期结算 ================= */
+function settle(silent){
+  const tk=todayKey();let changed=false;
+  Object.keys(S.days).sort().forEach(k=>{
+    if(k>=tk)return;
+    const d=S.days[k];
+    if(d.settled)return;
+    const deficit=dayTdee(k)-dayIntake(k);
+    S.cycle.accum=Math.max(0,(S.cycle.accum||0)+Math.round(deficit));
+    d.settled=true;d.deficitSnap=Math.round(deficit);changed=true;
+    if(d.deficitSnap>0)toast('📅 '+k+' 结算：缺口 '+d.deficitSnap+' 千卡，累进周期');
+  });
+  while(S.cycle.accum>=7700){
+    S.cycle.accum-=7700;S.cycle.done++;changed=true;
+    showCycleDone();
+  }
+  if(changed)save();
+  renderHome();
+}
+function showCycleDone(){
+  $('#cycleCount').textContent='第 '+S.cycle.done+' 个周期';
+  $('#cycleMask').classList.add('on');
+  if('Notification' in window && Notification.permission==='granted'){
+    try{new Notification('🎉 减脂周期达成！',{body:'7700 千卡缺口完成，≈减掉 1kg 脂肪！新周期已开启。'})}catch(e){}
+  }
+}
+function closeCycleModal(){$('#cycleMask').classList.remove('on');save();renderHome()}
+
+/* ================= 总览 ================= */
+function renderHome(){
+  const t=todayKey(),d=day(t);
+  const intake=dayIntake(t),tdee=dayTdee(t),bmr=calcBmr();
+  const deficit=tdee-intake;
+  $('#hdrDate').textContent=t+' '+['周日','周一','周二','周三','周四','周五','周六'][new Date().getDay()];
+  $('#tIntake').textContent=intake;
+  $('#tTdee').textContent=tdee;
+  $('#tBmr').textContent=bmr;
+  $('#tWatch').textContent=d.watch||0;
+  const de=$('#tDeficit');
+  de.textContent=deficit>0?'+'+deficit:deficit;
+  de.className='v '+(deficit>0?'green':(deficit<0?'red':''));
+  // 周期环
+  const pct=Math.min(100,Math.round(S.cycle.accum/7700*100));
+  $('#ringFg').style.strokeDashoffset=502.65*(1-pct/100);
+  $('#ringPct').textContent=pct+'%';
+  $('#ringSub').textContent='已累积 '+S.cycle.accum+' / 7700 千卡缺口';
+  $('#cycleDoneTag').textContent='已完成 '+S.cycle.done+' 个周期';
+  // 节奏预估：近7天日均缺口
+  let sum=0,n=0;
+  for(let i=1;i<=7;i++){const k=offsetKey(-i);if(S.days[k]&&S.days[k].settled){sum+=(S.days[k].deficitSnap??(dayTdee(k)-dayIntake(k)));n++}}
+  $('#paceNote').textContent=n?`近${n}天日均缺口 ${Math.round(sum/n)} 千卡，照此节奏约 ${Math.ceil((7700-S.cycle.accum)/Math.max(1,Math.round(sum/n)))} 天完成本周期`:'结算几天后这里会显示完成节奏预估';
+  // 提醒 banner（按优先级自动弹出该填什么）
+  $('#watchFillCard').style.display=((d.watch||0)===0)?'block':'none';
+  const b=$('#banner'),h=new Date().getHours();
+  if(!S.setupDone){
+    b.textContent='👋 第一次用：先点底部「消耗」填性别/年龄/身高/体重（只需填一次），就能算准缺口';
+    b.classList.add('on');
+  }else if(deficit<0){
+    b.textContent='⚠️ 今天已超支 '+(-deficit)+' 千卡，管住嘴，晚上少一口！';b.classList.add('on');
+  }else if((d.watch||0)===0&&h>=19){
+    b.textContent='⌚ 该填今天手表的活动能量了（点底部「消耗」），不然缺口算不准';b.classList.add('on');
+  }else if(intake===0&&h>=11){
+    b.textContent='🍽️ 今天还没记吃的，在「饮食」页输个数字就行';b.classList.add('on');
+  }else if(intake>0&&deficit>0&&deficit<300){
+    b.textContent='💡 今日缺口只有 '+deficit+' 千卡，想按期完成 7700 周期，缺口建议 ≥ 400';b.classList.add('on');
+  }else b.classList.remove('on');
+}
+function offsetKey(off){const d=new Date();d.setDate(d.getDate()+off);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+
+/* ================= 饮食 ================= */
+const guessMeal=()=>{const h=new Date().getHours();return h<10?'早餐':h<14?'午餐':h<17?'加餐':h<21?'晚餐':'加餐'};
+/* 内置食物库：[名称, 该份热量千卡]（按常见分量，估算值） */
+const FOODS=[
+["燕麦片 25g(干)",94],["燕麦片 40g(干)",150],["燕麦片 60g(干)",225],["牛奶 100ml",65],["酸奶 100g",70],
+["米饭 100g",116],["米饭 半碗",116],["鸡胸肉 50g",67],["面条(煮) 100g",110],["鸡蛋 2个",156],
+["米饭 1碗",232],["杂粮饭 1碗",260],["炒饭 1份",550],["扬州炒饭 1份",600],["馒头 1个",223],["花卷 1个",215],
+["面条(煮) 1碗",330],["牛肉面 1碗",550],["兰州拉面 1碗",550],["炸酱面 1碗",550],["热干面 1碗",600],["刀削面 1碗",480],
+["米线 1碗",400],["螺蛳粉 1碗",600],["酸辣粉 1碗",550],["河粉 1碗",400],["水饺 10个",450],["饺子 1个",45],
+["蒸饺 8个",400],["煎饺 8个",480],["猪肉包 1个",230],["菜包 1个",150],["小笼包 6个",400],["生煎 2个",300],
+["烧麦 2个",300],["油条 1根",270],["粽子 1个",400],["汤圆 3个",270],["面包 1片",95],["吐司 2片",160],
+["全麦面包 2片",140],["蛋糕 1块",350],["蛋挞 1个",250],["燕麦片 40g",150],["玉米 1根",110],["红薯 1个",200],
+["紫薯 1个",170],["土豆 1个",115],["白粥 1碗",115],["小米粥 1碗",120],["皮蛋瘦肉粥 1碗",350],["八宝粥 1碗",230],
+["汉堡 1个",550],["巨无霸 1个",550],["麦辣鸡腿堡 1个",570],["板烧鸡腿堡 1个",520],["薯条 中份",330],["鸡翅 1个",120],
+["炸鸡 1块",350],["鸡米花 中份",350],["披萨 2块",570],["卷饼 1个",450],["肉夹馍 1个",450],["煎饼果子 1套",450],
+["手抓饼 1个",400],["鸡蛋灌饼 1个",420],["三明治 1份",350],["沙拉(含酱) 1份",250],["牛排 1份",450],["意面 1份",550],
+["奶油意面 1份",700],["咖喱饭 1份",650],["猪排饭 1份",700],["鸡腿饭 1份",650],["黄焖鸡米饭 1份",750],
+["麻辣烫 1碗",700],["冒菜 1碗",650],["麻辣香锅 1份",900],["水煮鱼 1份",900],["鱼香肉丝盖饭 1份",700],
+["宫保鸡丁盖饭 1份",700],["红烧肉盖饭 1份",800],["番茄炒蛋盖饭 1份",600],["青椒肉丝盖饭 1份",650],["回锅肉盖饭 1份",750],
+["寿司 1卷(8块)",350],["石锅拌饭 1份",650],["鸡蛋 1个",78],["蛋白 1个",17],["炒蛋 1份",180],["咸鸭蛋 1个",130],
+["鸡胸肉 100g",133],["鸡腿肉 100g",180],["烤鸡胸 100g",150],["牛肉(瘦) 100g",125],["牛腱 100g",120],["肥牛 100g",250],
+["猪里脊 100g",143],["五花肉 100g",570],["猪排 100g",300],["排骨 100g",280],["羊肉 100g",200],["羊肉串 5串",350],
+["培根 2片",110],["火腿肠 1根",130],["午餐肉 2片",160],["香肠 1根",250],["腊肉 100g",500],["三文鱼 100g",140],
+["鳕鱼 100g",90],["龙利鱼 100g",85],["带鱼 100g",130],["虾 10只",90],["基围虾 100g",100],["虾滑 100g",120],
+["鱿鱼 100g",85],["生蚝 3只",60],["花甲 100g",60],["鸭肉 100g",240],["烤鸭 3块",300],["西兰花 100g",36],
+["菠菜 100g",28],["生菜 100g",15],["油麦菜 100g",15],["白菜 100g",20],["空心菜 100g",20],["韭菜 100g",26],
+["芹菜 100g",22],["黄瓜 100g",16],["番茄 100g",20],["茄子 100g",23],["青椒 100g",22],["洋葱 100g",40],
+["胡萝卜 100g",39],["冬瓜 100g",12],["丝瓜 100g",20],["豆芽 100g",18],["豆腐 100g",82],["豆腐皮 100g",260],
+["腐竹 100g",460],["千张 100g",300],["豆干 100g",180],["毛豆 100g",130],["玉米粒 100g",110],["蘑菇 100g",25],
+["香菇 100g",30],["金针菇 100g",32],["杏鲍菇 100g",35],["木耳(水发) 100g",27],["海带 100g",15],
+["清炒时蔬 1份",120],["蒜蓉青菜 1份",130],["白灼菜心 1份",80],["凉拌黄瓜 1份",60],["番茄炒蛋 1份",200],
+["清蒸鱼 1条",320],["白灼虾 1份",120],["苹果 1个",95],["香蕉 1根",105],["橙子 1个",70],["橘子 1个",45],
+["柚子 2瓣",60],["葡萄 10粒",40],["提子 10粒",50],["西瓜 1大块",90],["哈密瓜 1块",100],["芒果 1个",200],
+["菠萝 100g",44],["草莓 5颗",25],["蓝莓 1盒",70],["猕猴桃 1个",60],["火龙果 半个",100],["榴莲 1块",150],
+["荔枝 5颗",75],["桃子 1个",85],["梨 1个",95],["柿子 1个",120],["冬枣 5颗",55],["樱桃 10粒",50],
+["牛奶 1杯",160],["脱脂奶 1杯",85],["酸奶 1杯",140],["无糖酸奶 1杯",90],["希腊酸奶 1杯",130],["豆浆 1杯",80],
+["甜豆浆 1杯",150],["拿铁 1杯",220],["美式咖啡 1杯",5],["摩卡 1杯",360],["珍珠奶茶 1杯",460],["奶茶 三分糖",300],
+["果汁 1杯",150],["鲜榨橙汁 1杯",140],["可乐 1罐",142],["无糖可乐 1罐",0],["雪碧 1罐",140],["啤酒 1瓶",215],
+["白酒 50ml",175],["红酒 1杯",125],["功能饮料 1瓶",130],["蛋白粉 1勺",120],["椰子水 1个",45],
+["坚果 1把",150],["核桃 2个",80],["花生 15粒",85],["瓜子 1把",170],["开心果 10颗",40],["腰果 8颗",55],
+["每日坚果 1包",130],["蛋白棒 1根",200],["士力架 1根",250],["巧克力 1块",55],["黑巧克力 2块",105],
+["冰淇淋 1个",210],["圣代 1杯",300],["甜筒 1个",180],["果冻 1个",30],["海苔 1包",10],["魔芋爽 1包",30],
+["鸡胸肉肠 1根",60],["卤蛋 1个",90],["卤鸡爪 2个",150],["鸭脖 1根",90],["小龙虾 10只",150],["薯片 小包",280],
+["锅巴 1包",250],["山楂片 1包",90],["沙琪玛 1个",230],["月饼 1个",420],["绿豆糕 1块",150],["麻薯 1个",180],
+["橄榄油 1勺",90],["沙拉酱 1勺",60],["番茄酱 1勺",15],["黄油 1小块",72],["花生酱 1勺",95]
+];
+/* 整餐估算：不查细节，直接估一顿 */
+const MEAL_PRESETS=[
+["食堂一荤两素+米饭",600],["食堂两荤一素+米饭",750],["外卖炒菜+米饭",700],["一碗面/粉",500],
+["麦当劳/肯德基套餐",1000],["轻食沙拉",250],["火锅(正常吃一顿)",1200],["烧烤(喝点啤酒)",1000],
+["便利店饭团+关东煮",450],["自煮健身餐(鸡胸+米饭+菜)",550]
+];
+function searchFood(){
+  const q=$('#foodSearch').value.trim().toLowerCase();
+  if(!q){$('#foodResults').innerHTML='';return}
+  const hits=FOODS.filter(f=>f[0].toLowerCase().includes(q)).slice(0,10);
+  $('#foodResults').innerHTML=hits.length
+    ?hits.map(f=>`<div class="meal-item" onclick="addFood('${f[0]}',${f[1]})" style="cursor:pointer"><div class="nm">${f[0]}</div><span class="kc">${f[1]} 千卡 ›</span></div>`).join('')
+    :'<p class="small-note">没搜到？点「直接输千卡」手动记</p>';
+}
+function addFood(name,kcal){
+  const ts=Date.now();
+  day(todayKey()).meals.push({name,kcal,baseKcal:kcal,portion:1,meal:guessMeal(),time:fmtTime(new Date()),ts});
+  if(!S.favs.find(f=>f.name===name))S.favs.push({name,kcal});
+  if(S.favs.length>12)S.favs.shift();
+  save();$('#foodSearch').value='';$('#foodResults').innerHTML='';$('#foodSearch').focus();
+  showAdjust({ts,baseKcal:kcal,portion:1,name});
+  renderDiet();renderHome();toast('✅ 已记 '+name+' '+kcal+' 千卡（量不同可加减）');
+}
+function addPreset(i){
+  const p=MEAL_PRESETS[i],ts=Date.now();
+  day(todayKey()).meals.push({name:p[0],kcal:p[1],baseKcal:p[1],portion:1,meal:guessMeal(),time:fmtTime(new Date()),ts});
+  save();showAdjust({ts,baseKcal:p[1],portion:1,name:p[0]});
+  renderDiet();renderHome();toast('✅ 已记 '+p[0]+' 约 '+p[1]+' 千卡');
+}
+/* 调整刚记那一条的份量（±¼份，热量按比例变） */
+let LastAdj=null;
+function showAdjust(o){LastAdj=o;$('#adjustBar').style.display='block';$('#adjName').textContent=o.name;$('#adjKcal').textContent=curAdjKcal()+' 千卡'}
+function curAdjKcal(){return Math.round(LastAdj.baseKcal*LastAdj.portion)}
+function adjustLast(delta,del){
+  if(!LastAdj)return;
+  const meals=day(todayKey()).meals;
+  const idx=meals.findIndex(m=>m.ts===LastAdj.ts);
+  if(idx<0){$('#adjustBar').style.display='none';return}
+  if(del==='del'){meals.splice(idx,1);LastAdj=null;$('#adjustBar').style.display='none'}
+  else{
+    LastAdj.portion=Math.max(0.25,Math.round((LastAdj.portion+delta)*4)/4);
+    meals[idx].kcal=curAdjKcal();meals[idx].portion=LastAdj.portion;
+    $('#adjKcal').textContent=curAdjKcal()+' 千卡';
+    $('#adjName').textContent=LastAdj.name+(LastAdj.portion!==1?' ×'+LastAdj.portion:'');
+  }
+  save();renderDiet();renderHome();
+}
+function renderMealChips(){
+  $('#mealChips').innerHTML=MEAL_PRESETS.map((p,i)=>`<span class="chip" onclick="addPreset(${i})">${p[0]}<b>${p[1]}</b></span>`).join('');
+}
+function addMeal(){
+  const kcal=parseFloat($('#foodKcal').value);
+  if(!kcal||kcal<=0){toast('请填热量（千卡）');return}
+  const name=$('#foodName').value.trim();
+  const meal=guessMeal(),ts=Date.now();
+  day(todayKey()).meals.push({name:name||meal,kcal:Math.round(kcal),baseKcal:Math.round(kcal),portion:1,meal,time:fmtTime(new Date()),ts});
+  if(name&&!S.favs.find(f=>f.name===name&&f.kcal===Math.round(kcal))){
+    S.favs.push({name,kcal:Math.round(kcal)});
+    if(S.favs.length>12)S.favs.shift();
+  }
+  save();$('#foodKcal').value='';$('#foodName').value='';
+  showAdjust({ts,baseKcal:Math.round(kcal),portion:1,name:name||meal});
+  renderDiet();renderHome();
+}
+function quickFav(i){
+  const f=S.favs[i],t=todayKey();
+  day(t).meals.push({name:f.name,kcal:f.kcal,meal:guessMeal(),time:fmtTime(new Date()),ts:Date.now()});
+  save();renderDiet();renderHome();toast('已记 '+f.name+' '+f.kcal+' 千卡');
+}
+$('#foodSearch')&&$('#foodSearch').addEventListener('input',searchFood);
+$('#foodSearch')&&$('#foodSearch').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.value.trim())e.target.blur()});
+function delMeal(ts){const d=day(todayKey());d.meals=d.meals.filter(m=>m.ts!==ts);save();renderDiet();renderHome()}
+function renderDiet(){
+  const t=todayKey(),meals=day(t).meals;
+  $('#dietTotalTag').textContent='合计 '+meals.reduce((a,m)=>a+m.kcal,0)+' 千卡';
+  const order=['早餐','午餐','晚餐','加餐'];
+  let html='';
+  order.forEach(m=>{
+    const items=meals.filter(x=>x.meal===m);
+    if(!items.length)return;
+    const sub=items.reduce((a,x)=>a+x.kcal,0);
+    html+=`<div style="margin:10px 0 2px;font-size:13px;color:var(--acc);font-weight:700">${m} <span style="color:var(--sub);font-weight:400">· 本餐 ${sub} 千卡</span></div>`;
+    items.forEach(x=>{html+=`<div class="meal-item"><div><div class="nm">${x.name}${x.portion&&x.portion!==1?' <span style="color:var(--acc)">×'+x.portion+'</span>':''}</div><div class="mt">${x.time}</div></div><div class="row"><span class="kc">${x.kcal}</span><button class="del" onclick="delMeal(${x.ts})">✕</button></div></div>`});
+  });
+  $('#mealList').innerHTML=html||'<p class="small-note">还没记录，先记一餐吧</p>';
+  $('#favChips').innerHTML=S.favs.length?S.favs.map((f,i)=>`<span class="chip" onclick="quickFav(${i})">${f.name}<b>${f.kcal}</b></span>`).join(''):'<span class="small-note">记录过的食物会自动收藏到这里</span>';
+}
+// 长按删除收藏
+let lpTimer;
+$('#favChips').addEventListener('touchstart',e=>{
+  const chip=e.target.closest('.chip');if(!chip)return;
+  lpTimer=setTimeout(()=>{S.favs.splice([...$('#favChips').children].indexOf(chip),1);save();renderDiet();toast('已删除常用项')},600);
+},{passive:true});
+$('#favChips').addEventListener('touchend',()=>clearTimeout(lpTimer));
+
+/* ================= 消耗 ================= */
+function renderBurn(){
+  const p=S.profile,d=day(todayKey());
+  $('#watchInput').value=d.watch||'';
+  $('#pAge').value=p.age;$('#pHeight').value=p.height;$('#pWeight').value=p.weight;$('#pRhr').value=p.rhr;
+  [...$('#sexSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.s===p.sex));
+}
+function saveWatch(){
+  const v=parseFloat($('#watchInput').value)||0;
+  day(todayKey()).watch=Math.round(v);save();renderHome();toast('已保存活动能量 '+Math.round(v)+' 千卡');
+}
+function bumpWatch(n){
+  const d=day(todayKey());d.watch=(d.watch||0)+n;save();renderBurn();renderHome();toast('+'+n+' 千卡');
+}
+/* 剪贴板一键填入（配合 iOS 快捷指令每晚自动复制活动能量） */
+async function fillFromClipboard(){
+  let txt='';
+  try{txt=await navigator.clipboard.readText()}
+  catch(e){toast('读取剪贴板失败，请手动输入');return}
+  const v=parseFloat(String(txt).replace(/[^\d.]/g,''));
+  if(!v||v<50||v>50000){toast('剪贴板里没有合适的数字，请手动输入');return}
+  let val=v;
+  if(v>1500){
+    // 可能是千焦（健康库中文区常用单位）
+    if(confirm('剪贴板数值是 '+v+'，看起来像千焦（kJ）。要换算成千卡吗？\n（确定=换算 ÷4.184，取消=按千卡直接用）')){
+      val=v/4.184;
+    }
+  }
+  day(todayKey()).watch=Math.round(val);
+  save();renderBurn();renderHome();
+  toast('⌚ 已填入活动能量 '+Math.round(val)+' 千卡');
+}
+/* 拳头估算器：家常炒菜不用称不用查 */
+const HAND_DEFS=[['palm','🥩 肉类 掌心','150千卡/掌',150],['fist','🥦 蔬菜 一拳','50千卡/拳',50],['rice','🍚 米饭 一拳','200千卡/拳',200],['thumb','🫒 油 一拇指','40千卡/指',40]];
+let Hand={palm:0,fist:0,rice:0,thumb:0};
+function handTap(k,d){
+  Hand[k]=Math.max(0,Hand[k]+d);
+  renderHand();
+}
+function handTotal(){return HAND_DEFS.reduce((a,[k,,,v])=>a+Hand[k]*v,0)}
+function renderHand(){
+  $('#handBtns').innerHTML=HAND_DEFS.map(([k,label,note,v])=>`
+    <div class="row between" style="padding:7px 0;border-bottom:1px dashed var(--line)">
+      <div><b style="font-size:15px">${label}</b><div style="font-size:11px;color:var(--sub)">${note}</div></div>
+      <div class="row" style="gap:6px">
+        <button class="btn ghost" style="width:44px;padding:9px 0" onclick="handTap('${k}',-1)">－</button>
+        <b style="width:26px;text-align:center;font-size:18px">${Hand[k]}</b>
+        <button class="btn ghost" style="width:44px;padding:9px 0" onclick="handTap('${k}',1)">＋</button>
+      </div>
+    </div>`).join('')+
+    `<div class="row between" style="margin-top:10px">
+      <span class="big-num" style="font-size:24px">≈ ${handTotal()} 千卡</span>
+      <button class="btn" style="width:auto;padding:11px 22px" onclick="handRecord()">记上</button>
+    </div>
+    <p class="small-note">掌心≈手掌心大小区的肉，一拳≈拳头大的米饭/菜，一拇指≈一勺油。炒菜肉类通常1-2掌、油2-3拇指。</p>`;
+}
+function handRecord(){
+  if(handTotal()<=0){toast('先点几下估算份量');return}
+  day(todayKey()).meals.push({name:'家常菜(拳头估算)',kcal:handTotal(),meal:guessMeal(),time:fmtTime(new Date()),ts:Date.now()});
+  save();Hand={palm:0,fist:0,rice:0,thumb:0};renderHand();renderDiet();renderHome();
+  toast('✅ 已记录，这就是估算，不用纠结精确');
+}
+$('#sexSeg').addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON')return;
+  S.profile.sex=e.target.dataset.s;
+  [...$('#sexSeg').children].forEach(b=>b.classList.toggle('on',b===e.target));
+  save();renderHome();
+});
+['pAge','pHeight','pWeight','pRhr'].forEach(id=>{
+  $('#'+id).addEventListener('input',()=>{
+    const p=S.profile;
+    p.age=+$('#pAge').value||p.age;p.height=+$('#pHeight').value||p.height;
+    p.weight=+$('#pWeight').value||p.weight;p.rhr=+$('#pRhr').value||p.rhr;
+    if($('#pHeight').value&&$('#pWeight').value&&!S.setupDone){S.setupDone=true}
+    save();renderHome();
+  });
+});
+
+/* ================= URL 参数自动记录（配合 iOS 快捷指令） ================= */
+function handleURLParams(){
+  const q=new URLSearchParams(location.search);
+  let acted=false;
+  if(q.get('watch')){
+    const v=parseFloat(q.get('watch'));
+    if(v>0){day(todayKey()).watch=Math.round(v);acted=true;setTimeout(()=>toast('⌚ 已自动同步活动能量 '+Math.round(v)+' 千卡'),400)}
+  }
+  if(q.get('eat')){
+    const v=parseFloat(q.get('eat'));
+    if(v>0){
+      const meal=q.get('meal')||guessMeal();
+      day(todayKey()).meals.push({name:q.get('name')||meal,kcal:Math.round(v),meal,time:fmtTime(new Date()),ts:Date.now()});
+      acted=true;setTimeout(()=>toast('🍽️ 已自动记录 '+Math.round(v)+' 千卡'),400);
+    }
+  }
+  if(acted){save();history.replaceState(null,'',location.pathname)}
+}
+
+/* ================= 训练（按周课表自动排布） ================= */
+/* 动作定义：count=计数（sets组数/perSet每组固定/perSetMin-Max每组区间/total总数）
+   timer=秒表（sets组数/minSec-maxSec每秒区间/targetMin目标分钟=有氧）
+   alt=左右交替（perLegSets每侧组数/repsPerSet每组次数/legNames）
+   free=自由记录（spec=执行要求） */
+const ACTIONS={
+  coreA:{name:'核心A·平板支撑',icon:'🧘',cfg:{type:'timer',sets:6,minSec:60,restNote:'组间45-60秒'}},
+  coreB:{name:'核心B·仰卧卷腹',icon:'🌀',cfg:{type:'count',sets:5,perSet:20,restNote:'组间45-60秒'}},
+  coreC:{name:'核心C·谭式反向山羊挺身',icon:'🔥',spec:'①静态30秒→②动态15次+静态30秒×2轮→③手向上对掌，动态15次+静态30秒×1轮；段间休息30-45秒',cfg:{type:'free'}},
+  shoulderPT:{name:'肩部私教课',icon:'🏋️',spec:'按教练原课表执行，练完打勾记录',cfg:{type:'free'}},
+  rocket:{name:'火箭蹲',icon:'🚀',spec:'6-8kg · 5×20=100 · 组间45-75秒 · 末尾2分钟站立鸽子拉伸',cfg:{type:'count',sets:5,perSet:20,total:100}},
+  bike45:{name:'阻力自行车',icon:'🚴',spec:'约45分钟 · 能完整说句子的强度 · 起止渐进',cfg:{type:'timer',sets:1,targetMin:45}},
+  warmup:{name:'热身·高弓步+扭转高弓步',icon:'🤸',spec:'8分钟 · 左右均做 · 绕肩≥15次',cfg:{type:'timer',sets:1,targetMin:8}},
+  pullWide:{name:'跪姿辅助引体·宽距',icon:'💪',spec:'50kg辅助起始(轻松改45) · 组间75-90秒',cfg:{type:'count',sets:2,perSetMin:12,perSetMax:15}},
+  pullNeutral:{name:'跪姿辅助引体·对握',icon:'💪',spec:'45kg辅助起始 · 组间75-90秒',cfg:{type:'count',sets:2,perSet:12}},
+  pullChin:{name:'跪姿辅助引体·反手',icon:'💪',spec:'45kg辅助 · 组间75-90秒 · 三握法合计6组',cfg:{type:'count',sets:2,perSetMin:12,perSetMax:15}},
+  seatRow:{name:'坐姿划船',icon:'🚣',spec:'15-25kg档 · 6×12-15 · 前2组轻后4组工作组 · 组间60-90秒',cfg:{type:'count',sets:6,perSetMin:12,perSetMax:15}},
+  standRow:{name:'站姿划船(戴腰带)',icon:'🚣',spec:'原空杆 · 5×20=100 · 组间约60秒',cfg:{type:'count',sets:5,perSet:20,total:100}},
+  ropeCurl:{name:'绳索二头弯曲',icon:'💪',spec:'2片(标称10kg) · 5×20=100 · 组间60-90秒 · 凳子须稳固',cfg:{type:'count',sets:5,perSet:20,total:100}},
+  burpee:{name:'退阶波比',icon:'🏃',spec:'自重无跳/无俯卧撑 · 5×10=50 · 组间60-90秒 · 不追求爆发',cfg:{type:'count',sets:5,perSet:10,total:50}},
+  stairs:{name:'楼梯机',icon:'🪜',spec:'20分钟 · 自评用力4-5/10 · 不爬到腿软，为次日腿课留余力',cfg:{type:'timer',sets:1,targetMin:20}},
+  bikeInt:{name:'自行车间歇',icon:'🚴',spec:'25分钟：慢5分→(快1分+慢1分)×5轮→匀速10分 · 慢段即恢复',cfg:{type:'timer',sets:1,targetMin:25}},
+  latStretch:{name:'龙门架单臂背阔拉伸',icon:'🧘',spec:'每侧20-30秒×2 · 左右交替 · 不强拉到痛',cfg:{type:'free'}},
+  incline:{name:'跑步机爬坡走',icon:'🚶',spec:'约45分钟 · 坡度速度按谈话强度(能完整说话) · 先有氧不练到腿软',cfg:{type:'timer',sets:1,targetMin:45}},
+  hipAbd:{name:'坐姿髋外展机',icon:'🦵',spec:'4组：每组20全程+10小幅+静态10+10对抗 · 组间60-90秒 · 静态单位待教练确认',cfg:{type:'free'}},
+  legPress:{name:'倒蹬机',icon:'🦵',spec:'前4组各20(第2/4组各加一次重量) · 末组空车尽可能多 · 目标约100次 · 组间90-120秒',cfg:{type:'count',sets:5,perSetMin:15,perSetMax:25,total:100}},
+  hackSquat:{name:'哈克深蹲',icon:'🦵',spec:'5×15=75 · 组间约90秒 · 按教练安排执行',cfg:{type:'count',sets:5,perSet:15,total:75}},
+  pushup:{name:'俯卧撑·地面→凳上',icon:'🙌',spec:'地面2×5 + 凳上2×10，共30次 · 组间60秒 · 先难后易',cfg:{type:'count',sets:4,perSetMin:5,perSetMax:10,total:30}},
+  triceps:{name:'肱三头肌器械',icon:'💪',spec:'15kg起始 · 5×20=100 · 组间60-75秒 · 肘部稳定不甩动',cfg:{type:'count',sets:5,perSet:20,total:100}},
+  dbTriceps:{name:'俯身单臂哑铃臂屈伸',icon:'💪',spec:'2.5kg/手 · 每侧5×20=100(合计200) · 双侧一轮后休约1分钟',cfg:{type:'alt',perLegSets:5,repsPerSet:20,legNames:['左臂','右臂']}},
+  mountain:{name:'慢速登山',icon:'⛰️',spec:'4-6×30秒 · 组间约30秒 · 骨盆稳定不抬臀塌腰',cfg:{type:'timer',sets:5,minSec:30,maxSec:30,restNote:'组间约30秒'}},
+  bgs:{name:'保加利亚深蹲·私教课后作业',icon:'🦵',spec:'课后自练 · 每腿15×6 · 左右交替 · 组间心率降到100再做',cfg:{type:'alt',perLegSets:6,repsPerSet:15,hrGate:100}},
+  bridge:{name:'臀桥·私教课后作业',icon:'🍑',spec:'课后自练 · 戴腰带加一片 · 共100个每组15-20',cfg:{type:'count',total:100,perSetMin:15,perSetMax:20}},
+  legraise:{name:'仰卧上升腿',icon:'🦿',spec:'共100个 · 每组15-20 · 计数',cfg:{type:'count',total:100,perSetMin:15,perSetMax:20}},
+  plankFree:{name:'平板支撑(自由)',icon:'🧘',spec:'1-1.5分钟/组×7组 · 组间心率降到100再做',cfg:{type:'timer',sets:7,minSec:60,maxSec:90,hrGate:100}}
+};
+/* 周课表（getDay(): 0=周日 1=周一 ...） */
+const WEEK={
+  1:[['shoulderPT','0-50min'],['bgs','私教课后作业·课后自练'],['bridge','私教课后作业·课后自练'],['coreA','50-60min·三选一'],['coreB','50-60min·三选一'],['coreC','50-60min·三选一'],['rocket','60-75min'],['bike45','75-120min']],
+  2:[['warmup','0-5min'],['pullWide','5-9min'],['pullNeutral','9-13min'],['pullChin','13-17min'],['seatRow','17-35min'],['standRow','35-47min'],['ropeCurl','47-62min'],['coreA','62-72min·三选一'],['coreB','62-72min·三选一'],['coreC','62-72min·三选一'],['burpee','72-84min'],['stairs','84-104min'],['bikeInt','104-129min'],['latStretch','129-135min']],
+  3:[['incline','0-45min'],['warmup','45-53min'],['hipAbd','53-70min'],['legPress','70-88min'],['hackSquat','88-105min'],['coreA','105-115min·三选一'],['coreB','105-115min·三选一'],['coreC','105-115min·三选一']],
+  4:[['warmup','0-8min'],['pushup','8-16min'],['triceps','16-31min'],['dbTriceps','31-56min'],['burpee','56-68min'],['mountain','68-74min'],['coreA','74-86min·三选一'],['coreB','74-86min·三选一'],['coreC','74-86min·三选一'],['bike45','86-131min']],
+  5:[['warmup','0-8min'],['pullWide','8-15min'],['pullNeutral','15-22min'],['pullChin','22-29min'],['seatRow','29-50min'],['coreA','50-60min·三选一'],['coreB','50-60min·三选一'],['coreC','50-60min·三选一'],['bike45','60-105min'],['latStretch','105-120min']],
+  6:[['coreA','约8分钟·周末版3×45-60秒'],['coreB','约8分钟·周末版3×15'],['coreC','约8分钟·按C完成一套']],
+  0:[['coreA','约8分钟·周末版3×45-60秒'],['coreB','约8分钟·周末版3×15'],['coreC','约8分钟·按C完成一套']]
+};
+const BACKUP_KEYS=['legraise','plankFree'];
+const WD_CN=['周日','周一','周二','周三','周四','周五','周六'];
+function actionCard(k,slot){
+  const a=ACTIONS[k];
+  return `<button class="train-card" onclick="startSession('${k}')">
+    <div style="flex:1"><div class="tn">${a.icon} ${a.name}</div><div class="td">${a.spec||cfgDesc(a.cfg)}${slot?' · <b>'+slot+'</b>':''}</div></div><div class="go">›</div></button>`;
+}
+function renderTrainList(){
+  const wd=new Date().getDay(),dk=todayKey();
+  S.planDone=S.planDone||{};
+  const done=S.planDone[dk]||{};
+  /* 今天排最前，其余 6 天全部显示，随时可补课 */
+  const order=[wd,1,2,3,4,5,6,0].filter((v,i,a)=>a.indexOf(v)===i);
+  let html=`<div class="card" style="background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff">
+    <h2 style="color:#fff;margin-bottom:4px">📅 全周课表 · 打卡制</h2>
+    <p class="small-note" style="color:rgba(255,255,255,.8);margin:0">点 ✓ 打卡 / 点动作开练（练完自动勾）/ 没空可后延或跨天补课</p></div>`;
+  order.forEach(d=>{
+    const plan=WEEK[d]||[];if(!plan.length)return;
+    const isToday=d===wd;
+    const dn=plan.filter(([k])=>done[k]).length;
+    const allDone=dn===plan.length;
+    html+=`<details ${isToday?'open':''} class="card" style="padding:0 0 6px;${isToday?'border:2px solid var(--acc)':''}">
+      <summary style="padding:12px 16px;cursor:pointer;font-weight:700;font-size:16px">${allDone?'🎉 ':''}${WD_CN[d]}${isToday?' · 今天':''}
+        <span style="float:right;color:${allDone?'var(--green)':'var(--sub)'};font-weight:400;font-size:13px">${dn}/${plan.length} 完成</span></summary>
+      <div style="padding:0 10px">`
+      +plan.map(([k,slot])=>{
+        const a=ACTIONS[k],kd=!!done[k];
+        return `<div style="display:flex;align-items:center;gap:10px;margin:6px 0">
+          <span onclick="toggleDone('${k}','${dk}',event)" style="flex:none;width:32px;height:32px;border-radius:50%;border:2px solid ${kd?'var(--green)':'#cbd5e1'};background:${kd?'var(--green)':'transparent'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;cursor:pointer">${kd?'✓':''}</span>
+          <button class="train-card" style="flex:1;margin:0" onclick="startSession('${k}','${dk}')">
+            <div style="flex:1"><div class="tn">${a.icon} ${a.name}</div><div class="td">${a.spec||cfgDesc(a.cfg)}${slot?' · <b>'+slot+'</b>':''}</div></div><div class="go">›</div></button></div>`;
+      }).join('')
+      +`</div></details>`;
+  });
+  html+=`<div class="card"><h2>自选 / 补练</h2>${BACKUP_KEYS.map(k=>actionCard(k)).join('')}</div>`;
+  $('#trainList').innerHTML=html;
+}
+function markDone(key,dk){
+  dk=dk||todayKey();
+  if(!S.planDone[dk])S.planDone[dk]={};
+  S.planDone[dk][key]=true;save();
+}
+function toggleDone(key,dk,ev){
+  ev.stopPropagation();ev.preventDefault();
+  if(!S.planDone[dk])S.planDone[dk]={};
+  if(S.planDone[dk][key])delete S.planDone[dk][key];else S.planDone[dk][key]=true;
+  save();renderTrainList();
+}
+function cfgDesc(c){
+  if(c.type==='alt')return `每侧 ${c.repsPerSet} 个 × ${c.perLegSets} 组${c.hrGate?' · 组间心率≤'+c.hrGate:''}`;
+  if(c.type==='timer'){
+    if(c.targetMin)return `计时约 ${c.targetMin} 分钟`;
+    return `${c.minSec}–${c.maxSec||60} 秒/组 × ${c.sets} 组${c.hrGate?' · 组间心率≤'+c.hrGate:''}`;
+  }
+  if(c.type==='count'){
+    if(c.sets&&c.perSet)return `${c.sets}×${c.perSet}${c.total?'='+c.total:''}`;
+    if(c.sets)return `${c.sets} 组 · 每组 ${c.perSetMin}${c.perSetMax?'-'+c.perSetMax:''} 个`;
+    return `共 ${c.total} 个 · 每组 ${c.perSetMin}${c.perSetMax?'-'+c.perSetMax:''}`;
+  }
+  return '完成打勾';
+}
+/* ---- 会话引擎 ---- */
+let Sess=null,wakeLock=null,restTimer=null,workTimer=null;
+async function reqWake(){
+  try{if('wakeLock' in navigator)wakeLock=await navigator.wakeLock.request('screen')}catch(e){}
+}
+function relWake(){try{wakeLock&&wakeLock.release()}catch(e){}wakeLock=null}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Sess&&Sess.timerOn)reqWake()});
+
+function startSession(key,planDate){
+  const a=ACTIONS[key],c=a.cfg;
+  Sess={key,name:a.name,icon:a.icon,spec:a.spec,cfg:c,leg:'L',legL:0,legR:0,setRep:0,
+    reps:0,setsDone:[],times:[],startTs:0,restStart:0,timerOn:false,sessionStart:Date.now(),targetHit:false,
+    planDate:planDate||todayKey()};
+  $('#trainList').style.display='none';$('#trainSession').style.display='block';
+  renderSession();
+}
+function backToList(){
+  if(workTimer)clearInterval(workTimer);
+  Sess=null;relWake();
+  $('#trainList').style.display='block';$('#trainSession').style.display='none';
+  renderTrainLog();renderHome();
+}
+function renderSession(){
+  const s=Sess,c=s.cfg;let html='';
+  html+=`<div class="row between" style="margin-bottom:10px"><button class="btn ghost" style="width:auto" onclick="backToList()">‹ 返回</button><b style="font-size:18px">${s.icon} ${s.name}</b><span style="width:64px"></span></div>`;
+  if(s.spec)html+=`<div class="card" style="background:var(--chip);padding:12px 16px"><p class="small-note" style="margin:0;font-size:13px;color:var(--ink)">📋 ${s.spec}</p></div>`;
+
+  if(c.type==='free'){ /* 自由记录：私教课/拉伸/复杂组合 */
+    html+=`<div class="card" style="text-align:center;padding:30px 16px">
+      <div style="font-size:52px;margin-bottom:10px">✅</div>
+      <p class="rep-sub" style="font-size:15px">按上面的要求练完，点这里记一笔</p>
+      <button class="btn" style="font-size:22px;padding:20px" onclick="finishFree()">完成，记录 ✓</button></div>`;
+    $('#trainSession').innerHTML=html;return;
+  }
+  if(c.type==='alt'){ /* 左右交替 */
+    const ln=c.legNames||['左腿','右腿'];
+    const totalPerLeg=c.perLegSets*c.repsPerSet;
+    const doneL=Math.floor(s.legL/c.repsPerSet),doneR=Math.floor(s.legR/c.repsPerSet);
+    html+=`<div class="card" style="text-align:center">
+      <div class="leg-row"><span class="leg-tag ${s.leg==='L'?'on':''}">${ln[0]}</span><span class="leg-tag ${s.leg==='R'?'on':''}">${ln[1]}</span></div>
+      <div class="setdots">${Array.from({length:c.perLegSets},(_,i)=>`<span class="dot ${i+1<=doneL&&i+1<=doneR?'done':(i+1===Math.min(doneL,doneR)+1?'cur':'')}"></span>`).join('')}</div>
+      <div class="rep-num">${s.setRep}<span style="font-size:26px;color:var(--sub)">/${c.repsPerSet}</span></div>
+      <div class="rep-sub">${ln[0]} ${s.legL}/${totalPerLeg} · ${ln[1]} ${s.legR}/${totalPerLeg} · 共 ${s.legL+s.legR+s.setRep} 个 · 当前${s.leg==='L'?ln[0]:ln[1]}第 ${Math.min(doneL,doneR)+1} 组</div>
+      <button class="btn" style="font-size:26px;padding:24px" onclick="repOne()">＋1</button>
+      <div class="row" style="gap:8px;margin-top:8px">
+        <button class="btn ghost" onclick="undoOne()">－1 撤销</button>
+        <button class="btn warn" onclick="finishSet()">本组完成（换边）</button>
+      </div>
+      <div class="row" style="gap:8px;margin-top:8px">
+        <input id="manualReps" type="number" inputmode="numeric" placeholder="懒得点？直接输${'当前'+(c.legNames?c.legNames[s.leg==='L'?0:1]:'')}个数" style="flex:1;text-align:center">
+        <button class="btn ghost" style="width:auto" onclick="fillReps()">填入</button>
+      </div>
+      <button class="btn ghost" style="width:100%;margin-top:8px" onclick="finishAllPerPlan()">✅ 没空数了，按计划直接记全部完成</button>
+      <p class="small-note">可点可输，输错了直接输正确数字覆盖 💪 满 ${c.repsPerSet} 个自动换边${c.hrGate?'并进入心率门槛':''}</p></div>`;
+  }else if(c.type==='timer'){ /* 秒表：平板/登山/有氧 */
+    const isCardio=!!c.targetMin;
+    const targetTxt=isCardio?`目标约 ${c.targetMin} 分钟`:`目标 ${c.minSec}–${c.maxSec||60} 秒/组`;
+    html+=`<div class="card" style="text-align:center">
+      ${isCardio?'':`<div class="setdots">${Array.from({length:c.sets},(_,i)=>`<span class="dot ${i+1<=s.times.length?'done':(i+1===s.times.length+1?'cur':'')}"></span>`).join('')}</div>`}
+      <div class="timer-big" id="plankTime">0:00</div>
+      <div class="rep-sub">${targetTxt}${isCardio?'':' · 已完成 '+s.times.length+'/'+c.sets+' 组'}${c.restNote?' · '+c.restNote:''}</div>
+      ${s.times.length&&!isCardio?`<div class="rep-sub">各组时长：${s.times.map(t=>t+'s').join(' · ')}</div>`:''}
+      ${s.targetHit?`<div class="rep-sub" style="color:var(--green);font-weight:700">✅ 目标时间已到，可以结束</div>`:''}
+      ${!s.timerOn?`<button class="btn" style="font-size:22px;padding:20px" onclick="startPlank()">▶︎ 开始计时${isCardio?'':'（第 '+(s.times.length+1)+' 组）'}</button>`
+      :`<button class="btn danger" style="font-size:22px;padding:20px" onclick="stopPlank()">■ 完成${isCardio?'（结束）':'本组'}</button>
+        <p class="small-note">屏幕已常亮 📵</p>`}</div>`;
+  }else{ /* 计数类 */
+    const perTxt=c.perSet?('/'+c.perSet):(c.perSetMin?('/'+c.perSetMin+(c.perSetMax?'-'+c.perSetMax:'')):'/本组');
+    const minPer=c.perSet||c.perSetMin||1;
+    const done=sumArr(s.setsDone)+s.reps;
+    const grpTxt=c.sets?`第 ${Math.min(s.setsDone.length+1,c.sets)} / ${c.sets} 组`:'';
+    html+=`<div class="card" style="text-align:center">
+      <div class="rep-num">${s.reps}<span style="font-size:26px;color:var(--sub)">${perTxt}</span></div>
+      <div class="rep-sub">${grpTxt}${c.total?' · 总进度 '+done+'/'+c.total:''} · 已完成 ${s.setsDone.length} 组 ${s.setsDone.length?`(${s.setsDone.join('·')})`:''}</div>
+      <div class="timer-big" id="sesTimer" style="font-size:34px">${fmtDur(Date.now()-s.sessionStart)}</div>
+      <button class="btn" style="font-size:26px;padding:24px" onclick="repOne()">＋1</button>
+      <div class="row" style="gap:8px;margin-top:8px">
+        <button class="btn ghost" onclick="undoOne()">－1 撤销</button>
+        <button class="btn warn" ${s.reps>0?'':'disabled style="opacity:.4"'} onclick="finishSet()">本组结束</button>
+      </div>
+      <div class="row" style="gap:8px;margin-top:8px">
+        <input id="manualReps" type="number" inputmode="numeric" placeholder="懒得点？直接输当前组个数" style="flex:1;text-align:center">
+        <button class="btn ghost" style="width:auto" onclick="fillReps()">填入</button>
+      </div>
+      <button class="btn ghost" style="width:100%;margin-top:8px" onclick="finishAllPerPlan()">✅ 没空数了，按计划直接记全部完成</button>
+      <p class="small-note">做完一组点「本组结束」休息；输错直接输正确数字覆盖 💪</p></div>`;
+    if(!s.timerOn){s.timerOn=true;s.startTs=Date.now();reqWake();
+      workTimer=setInterval(()=>{const el=$('#sesTimer');if(el)el.textContent=fmtDur(Date.now()-s.sessionStart)},1000);}
+  }
+  $('#trainSession').innerHTML=html;
+}
+const sumArr=a=>a.reduce((x,y)=>x+y,0);
+const fmtDur=ms=>{const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+
+function repOne(){
+  const s=Sess,c=s.cfg;
+  if(c.type==='alt'){
+    s.setRep++;
+    if(s.setRep>=c.repsPerSet)finishSet(true);
+    else renderSession();
+  }
+  else{
+    s.reps++;
+    const perMax=c.perSet||c.perSetMax||c.total||99;
+    if(s.reps>=perMax&&(c.perSet||c.perSetMax)){finishSet(true)}
+    else renderSession();
+  }
+}
+function undoOne(){
+  const s=Sess,c=s.cfg;
+  if(c.type==='alt'){if(s.setRep>0)s.setRep--;}
+  else if(s.reps>0)s.reps--;
+  renderSession();
+}
+/* 手输数字一键填入（输错可直接输正确数覆盖） */
+function fillReps(){
+  const s=Sess,c=s.cfg;
+  const v=parseInt($('#manualReps').value,10);
+  if(isNaN(v)||v<0){toast('输个数（0 也行）');return}
+  if(c.type==='alt'){
+    s.setRep=v;
+    if(v>=c.repsPerSet){$('#manualReps').value='';finishSet(true)}else renderSession();
+  }else{
+    s.reps=v;
+    const perMax=c.perSet||c.perSetMax||0;
+    if(perMax&&v>=perMax){$('#manualReps').value='';finishSet(true)}else renderSession();
+  }
+}
+/* 没空数了：按课表计划直接整项记完成 */
+function finishAllPerPlan(){
+  const s=Sess,c=s.cfg;
+  if(c.type==='alt'){
+    const t=c.perLegSets*c.repsPerSet;
+    s.legL=t;s.legR=t;s.setRep=0;
+    s.setsDone=Array.from({length:c.perLegSets*2},()=>c.repsPerSet);
+  }else if(c.type==='timer'){
+    if(c.targetMin){s.times=[c.targetMin*60];s.targetHit=true}
+    else s.times=Array.from({length:c.sets},()=>c.minSec);
+  }else{
+    const per=c.perSet||(c.perSetMin&&c.perSetMax?Math.round((c.perSetMin+c.perSetMax)/2):(c.perSetMin||c.total||0));
+    const setsN=c.sets||Math.max(1,Math.ceil((c.total||per)/(per||1)));
+    s.setsDone=Array.from({length:setsN},()=>per);
+  }
+  finishSession(true);
+}
+function finishSet(auto){
+  const s=Sess,c=s.cfg;
+  const totalPerLeg=c.perLegSets*c.repsPerSet;
+  if(c.type==='alt'){
+    if(s.leg==='L')s.legL+=s.setRep;else s.legR+=s.setRep;
+    if(s.setRep>0)s.setsDone.push(s.setRep);
+    s.setRep=0;
+    if(s.legL>=totalPerLeg&&s.legR>=totalPerLeg){finishSession();return}
+    s.leg=s.leg==='L'?'R':'L';
+  }else{
+    if(s.reps>0)s.setsDone.push(s.reps);
+    s.reps=0;
+    if((c.sets&&s.setsDone.length>=c.sets)||(c.total&&sumArr(s.setsDone)>=c.total)){finishSession();return}
+  }
+  if(c.hrGate&&c.hrGate>0)openHRGate();else{renderSession();toast(c.restNote||'休息一下，下一组！')}
+}
+function startPlank(){
+  const s=Sess;s.timerOn=true;s.startTs=Date.now();s.targetHit=false;reqWake();
+  workTimer=setInterval(()=>{
+    const el=$('#plankTime');if(!el)return;
+    const secs=Math.floor((Date.now()-s.startTs)/1000);
+    el.textContent=fmtDur(Date.now()-s.startTs);
+    if(s.cfg.targetMin&&!s.targetHit&&secs>=s.cfg.targetMin*60){s.targetHit=true;renderSession()}
+  },250);
+  renderSession();
+}
+function stopPlank(){
+  const s=Sess,c=s.cfg;
+  clearInterval(workTimer);workTimer=null;
+  const dur=Math.round((Date.now()-s.startTs)/1000);
+  s.timerOn=false;s.times.push(dur);relWake();
+  if(c.targetMin||s.times.length>=c.sets){finishSession();return}
+  if(c.hrGate>0)openHRGate();else{renderSession();toast('第 '+dur+' 秒完成！'+(c.restNote||'休息一下'))}
+}
+function finishFree(){
+  const s=Sess;
+  const d=day(todayKey());
+  d.workouts.push({name:s.name,icon:s.icon,total:'✓',detail:s.spec||'已完成',ts:Date.now(),durMin:Math.round((Date.now()-s.sessionStart)/60000)});
+  markDone(s.key,s.planDate);
+  save();backToList();
+  toast('✅ '+s.name+' 已记录并打卡');
+}
+/* 心率门槛 */
+function openHRGate(){
+  const s=Sess;
+  $('#hrGateVal').textContent=s.cfg.hrGate;
+  $('#hrInput').value='';$('#hrMask').classList.add('on');
+  s.restStart=Date.now();
+  restTimer=setInterval(()=>{$('#hrRestTime').textContent=fmtDur(Date.now()-s.restStart)},500);
+}
+function submitHR(){
+  const v=+$('#hrInput').value;
+  if(!v){toast('输入当前心率');return}
+  if(v>Sess.cfg.hrGate){toast('❤️ 心率 '+v+' 还没降到 '+Sess.cfg.hrGate+'，再歇一会儿');$('#hrInput').value='';return}
+  clearInterval(restTimer);restTimer=null;
+  $('#hrMask').classList.remove('on');
+  renderSession();toast('心率 '+v+' ✓ 达标，开练！');
+}
+function skipHR(){clearInterval(restTimer);restTimer=null;$('#hrMask').classList.remove('on');renderSession()}
+function finishSession(){
+  const s=Sess,c=s.cfg;
+  clearInterval(workTimer);workTimer=null;relWake();
+  const t=todayKey(),d=day(t);
+  let detail='',total=0;
+  const ln=c.legNames||['左腿','右腿'];
+  if(c.type==='alt'){total=s.legL+s.legR;detail=`${ln[0]} ${s.legL} · ${ln[1]} ${s.legR}，${s.setsDone.length} 组`}
+  else if(c.type==='timer'){
+    if(c.targetMin){const sec=sumArr(s.times);total=Math.round(sec/60);detail=`计时 ${Math.floor(sec/60)}分${sec%60?sec%60+'秒':''}${s.targetHit?'（达标 ✓）':''}`}
+    else{total=s.times.length;detail=s.times.map((x,i)=>`第${i+1}组${x}s`).join('，')}
+  }
+  else{total=sumArr(s.setsDone)+(s.reps>0?s.reps:0);detail=`${s.setsDone.length} 组，共 ${total} 个`}
+  d.workouts.push({name:s.name,icon:s.icon,total,detail,ts:Date.now(),durMin:Math.round((Date.now()-s.sessionStart)/60000)});
+  markDone(s.key,s.planDate);
+  save();backToList();
+  toast(`✅ ${s.name} 完成！${detail}`);
+}
+function renderTrainLog(){
+  const w=day(todayKey()).workouts;
+  $('#trainLogList').innerHTML=w.length?w.map(x=>`<div class="workout-log-item">${x.icon} <b>${x.name}</b> · ${x.detail}${x.durMin?' · 约'+x.durMin+'分钟':''}</div>`).join(''):'<p class="small-note" style="margin:0">今天还没练，选一个动作开练 💪</p>';
+}
+
+/* ================= 历史 ================= */
+function renderHist(){
+  let html='';
+  for(let i=0;i<14;i++){
+    const k=offsetKey(-i),d=S.days[k];
+    if(!d)continue;
+    const intake=dayIntake(k),tdee=dayTdee(k);
+    const def=d.settled?d.deficitSnap:(tdee-intake);
+    html+=`<div class="hist-row"><span class="d">${k.slice(5)}</span><span>${intake} / ${tdee}</span>
+      <span style="color:${def>0?'var(--green)':'var(--red)'};font-weight:700">${def>0?'+'+def:def}</span>
+      <span>${(d.workouts||[]).length?d.workouts.map(w=>w.icon).join(''):'—'}</span></div>`;
+  }
+  $('#histList').innerHTML=html||'<p class="small-note">暂无记录</p>';
+  $('#histCycles').textContent=S.cycle.done+' 个';
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fitbuddy-'+todayKey()+'.json';a.click();
+}
+function resetAll(){
+  if(confirm('确定清空所有数据？不可恢复！')){localStorage.removeItem(K);location.reload()}
+}
+
+/* ================= 通知与启动 ================= */
+$('#btnNotif').onclick=async()=>{
+  if(!('Notification' in window)){toast('此浏览器不支持通知');return}
+  const p=await Notification.requestPermission();
+  toast(p==='granted'?'✅ 通知已开启，周期达成会提醒你':'通知未授权');
+};
+$('#btnSettle').onclick=()=>{settle();toast('已结算')};
+
+function switchView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===id));
+  $('#'+id).classList.add('on');
+  if(id==='v-diet'){renderDiet();$('#foodSearch').focus()}
+  if(id==='v-burn')renderBurn();
+  if(id==='v-train')renderTrainLog();
+  if(id==='v-hist')renderHist();
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
+
+load();
+if(!S.days[todayKey()])day(todayKey());
+settle(true);
+handleURLParams();
+renderHome();renderDiet();renderBurn();renderTrainList();renderTrainLog();renderHist();renderMealChips();renderHand();
+
+/* SW 注册（离线可用） */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
