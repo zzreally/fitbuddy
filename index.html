@@ -656,15 +656,15 @@ function handleURLParams(){
    free=自由记录（spec=执行要求） */
 const ACTIONS={
   coreA:{name:'核心A·平板支撑',icon:'🧘',cfg:{type:'timer',sets:6,minSec:60,restNote:'组间45-60秒'}},
-  coreB:{name:'核心B·仰卧上升腿(卷腹)',icon:'🌀',spec:'仰卧上升腿/卷腹同款动作 · 5×20=100 或每组15-20 · 组间45-60秒',cfg:{type:'count',sets:5,perSet:20,total:100,perSetMin:15,perSetMax:20}},
+  coreB:{name:'核心B·仰卧上升腿(卷腹)',icon:'🌀',spec:'工作日5×20=100 / 周末3×15 · 组间45-60秒 · 可用教练确认的悬垂卷腹/举腿替换（替换而非叠加）',cfg:{type:'count',sets:5,perSet:20,total:100,perSetMin:15,perSetMax:20}},
   coreC:{name:'核心C·谭式反向山羊挺身',icon:'🔥',spec:'①静态30秒→②动态15次+静态30秒×2轮→③手向上对掌，动态15次+静态30秒×1轮；段间休息30-45秒',cfg:{type:'free'}},
   shoulderPT:{name:'肩部私教课',icon:'🏋️',spec:'按教练原课表执行，练完打勾记录',cfg:{type:'free'}},
   rocket:{name:'火箭蹲',icon:'🚀',spec:'6-8kg · 5×20=100 · 组间45-75秒 · 末尾2分钟站立鸽子拉伸',cfg:{type:'count',sets:5,perSet:20,total:100}},
   bike45:{name:'阻力自行车',icon:'🚴',spec:'约45分钟 · 能完整说句子的强度 · 起止渐进',cfg:{type:'timer',sets:1,targetMin:45}},
   warmup:{name:'热身·高弓步+扭转高弓步',icon:'🤸',spec:'8分钟 · 左右均做 · 绕肩≥15次',cfg:{type:'timer',sets:1,targetMin:8}},
-  pullWide:{name:'跪姿辅助引体·宽距',icon:'💪',spec:'50kg辅助起始(轻松改45) · 组间75-90秒',cfg:{type:'count',sets:2,perSetMin:12,perSetMax:15}},
-  pullNeutral:{name:'跪姿辅助引体·对握',icon:'💪',spec:'45kg辅助起始 · 组间75-90秒',cfg:{type:'count',sets:2,perSet:12}},
-  pullChin:{name:'跪姿辅助引体·反手',icon:'💪',spec:'45kg辅助 · 组间75-90秒 · 三握法合计6组',cfg:{type:'count',sets:2,perSetMin:12,perSetMax:15}},
+  pullWide:{name:'跪姿辅助引体·宽距',icon:'💪',spec:'周二1×12-15 / 周五2×15 · 50kg辅助起始(轻松改45) · 组间75-90秒',cfg:{type:'count',sets:2,perSetMin:12,perSetMax:15}},
+  pullNeutral:{name:'跪姿辅助引体·对握',icon:'💪',spec:'周二1×12 / 周五2×12 · 45kg辅助起始(难以标准改50) · 组间约75秒',cfg:{type:'count',sets:2,perSet:12}},
+  pullChin:{name:'跪姿辅助引体·反手',icon:'💪',spec:'周二1×12-15 / 周五2×12-15 · 45kg辅助 · 组间约75秒 · 三握法之后再做坐姿划船',cfg:{type:'count',sets:2,perSetMin:12,perSetMax:15}},
   seatRow:{name:'坐姿划船',icon:'🚣',spec:'15-25kg档 · 6×12-15 · 前2组轻后4组工作组 · 组间60-90秒',cfg:{type:'count',sets:6,perSetMin:12,perSetMax:15}},
   standRow:{name:'站姿划船(戴腰带)',icon:'🚣',spec:'原空杆 · 5×20=100 · 组间约60秒',cfg:{type:'count',sets:5,perSet:20,total:100}},
   ropeCurl:{name:'绳索二头弯曲',icon:'💪',spec:'2片(标称10kg) · 5×20=100 · 组间60-90秒 · 凳子须稳固',cfg:{type:'count',sets:5,perSet:20,total:100}},
@@ -673,31 +673,40 @@ const ACTIONS={
   bikeInt:{name:'自行车间歇',icon:'🚴',spec:'25分钟：慢5分→(快1分+慢1分)×5轮→匀速10分 · 慢段即恢复',cfg:{type:'timer',sets:1,targetMin:25}},
   latStretch:{name:'龙门架单臂背阔拉伸',icon:'🧘',spec:'每侧20-30秒×2 · 左右交替 · 不强拉到痛',cfg:{type:'free'}},
   incline:{name:'跑步机爬坡走',icon:'🚶',spec:'约45分钟 · 坡度速度按谈话强度(能完整说话) · 先有氧不练到腿软',cfg:{type:'timer',sets:1,targetMin:45}},
-  hipAbd:{name:'坐姿髋外展机',icon:'🦵',spec:'4组：每组20全程+10小幅+静态10+10对抗 · 组间60-90秒 · 静态单位待教练确认',cfg:{type:'free'}},
-  legPress:{name:'倒蹬机',icon:'🦵',spec:'前4组各20(第2/4组各加一次重量) · 末组空车尽可能多 · 目标约100次 · 组间90-120秒',cfg:{type:'count',sets:5,perSetMin:15,perSetMax:25,total:100}},
-  hackSquat:{name:'哈克深蹲',icon:'🦵',spec:'5×15=75 · 组间约90秒 · 按教练安排执行',cfg:{type:'count',sets:5,perSet:15,total:75}},
+  hipAbd:{name:'坐姿髋外展机',icon:'🦵',spec:'课内① · 4组 · 每组20全程+10小幅+静态10+10对抗 · 顺序可由教练调整 · 静态单位待确认',cfg:{type:'free'}},
+  legPress:{name:'倒蹬机',icon:'🦵',spec:'课内② · 目标约100次 · 两次加重重量待教练填 · 末组空车标准动作尽可能多',cfg:{type:'count',sets:5,perSetMin:15,perSetMax:25,total:100}},
+  hackSquat:{name:'哈克深蹲',icon:'🦵',spec:'课内③ · 5×15=75 · 是否保留全部5组待教练本次重排',cfg:{type:'count',sets:5,perSet:15,total:75}},
   pushup:{name:'俯卧撑·地面→凳上',icon:'🙌',spec:'地面2×5 + 凳上2×10，共30次 · 组间60秒 · 先难后易',cfg:{type:'count',sets:4,perSetMin:5,perSetMax:10,total:30}},
   triceps:{name:'肱三头肌器械',icon:'💪',spec:'15kg起始 · 5×20=100 · 组间60-75秒 · 肘部稳定不甩动',cfg:{type:'count',sets:5,perSet:20,total:100}},
   dbTriceps:{name:'俯身单臂哑铃臂屈伸',icon:'💪',spec:'2.5kg/手 · 每侧5×20=100(合计200) · 双侧一轮后休约1分钟',cfg:{type:'alt',perLegSets:5,repsPerSet:20,legNames:['左臂','右臂']}},
   mountain:{name:'慢速登山',icon:'⛰️',spec:'4-6×30秒 · 组间约30秒 · 骨盆稳定不抬臀塌腰',cfg:{type:'timer',sets:5,minSec:30,maxSec:30,restNote:'组间约30秒'}},
-  bgs:{name:'保加利亚深蹲·私教课后作业',icon:'🦵',spec:'课后自练 · 每腿15×6 · 左右交替 · 组间心率降到100再做',cfg:{type:'alt',perLegSets:6,repsPerSet:15,hrGate:100}},
-  bridge:{name:'臀桥·私教课后作业',icon:'🍑',spec:'课后自练 · 戴腰带加一片 · 共100个每组15-20',cfg:{type:'count',total:100,perSetMin:15,perSetMax:20}},
+  bgs:{name:'保加利亚深蹲',icon:'🦵',spec:'周三课内⑤ · 5kg哑铃 · 每侧6×15=90 · 左右交替 · 组间心率降到100再做 · 顺序可由教练调整',cfg:{type:'alt',perLegSets:6,repsPerSet:15,hrGate:100}},
+  bridge:{name:'臀桥',icon:'🍑',spec:'周三课内④ · 戴腰带 · 原杆+1片 · 累计100 · 参考5×20 · 腿课前段或后段均可',cfg:{type:'count',sets:5,perSet:20,total:100,perSetMin:15,perSetMax:20}},
   legraise:{name:'仰卧上升腿',icon:'🦿',spec:'同核心B（仰卧卷腹为同一动作）· 共100个 · 每组15-20',cfg:{type:'count',total:100,perSetMin:15,perSetMax:20}},
-  plankFree:{name:'平板支撑(自由)',icon:'🧘',spec:'1-1.5分钟/组×7组 · 组间心率降到100再做',cfg:{type:'timer',sets:7,minSec:60,maxSec:90,hrGate:100}}
+  plankFree:{name:'平板支撑(自由)',icon:'🧘',spec:'1-1.5分钟/组×7组 · 组间心率降到100再做',cfg:{type:'timer',sets:7,minSec:60,maxSec:90,hrGate:100}},
+  pigeon:{name:'站立鸽子拉伸',icon:'🕊️',spec:'每侧20-30秒×2 · 左右交替 · 轻柔牵拉不强拉到痛',cfg:{type:'free'}},
+  /* 自由课（独立可选，不固定日期，不与常规背课叠加） */
+  shoulderWarm:{name:'自由课·绕肩热身',icon:'🤸',spec:'至少15次 · 沿用教练已教热身版本',cfg:{type:'free'}},
+  hangCore:{name:'悬垂卷腹/悬垂举腿',icon:'🧗',spec:'累计100次 · 握法与幅度由教练确认 · 替代当天仰卧卷腹（替换而非叠加，不默认每天悬垂100）',cfg:{type:'count',total:100,perSetMin:10}},
+  crawlSide:{name:'动物爬·左右',icon:'🦎',spec:'组数×距离/速度首次试课填实数 · 左右均做',cfg:{type:'free'}},
+  crawlFB:{name:'动物爬·前后',icon:'🦎',spec:'组数×距离/速度首次试课填实数 · 前后均做',cfg:{type:'free'}},
+  hipJump:{name:'左右腿开髋跳',icon:'🦘',spec:'3-4组×20 · 20次为合计还是每侧待教练核对',cfg:{type:'count',sets:4,perSet:20,total:80}},
+  burpeeJump:{name:'波比跳',icon:'💥',spec:'累计100次 · 与退阶波比不是同版 · 跳跃/俯卧撑口径待教练核对 · 按质量不赶数',cfg:{type:'count',total:100,perSetMin:10}}
 };
 /* 周课表（getDay(): 0=周日 1=周一 ...） */
 const WEEK={
-  1:[['shoulderPT','0-50min'],['bgs','私教课后作业·课后自练'],['bridge','私教课后作业·课后自练'],['coreA','50-60min·三选一'],['coreB','50-60min·三选一'],['coreC','50-60min·三选一'],['rocket','60-75min'],['bike45','75-120min']],
+  1:[['shoulderPT','0-50min·含热身'],['coreA','50-60min·三选一'],['coreB','50-60min·三选一'],['coreC','50-60min·三选一'],['rocket','60-75min'],['bike45','75-120min']],
   2:[['warmup','0-5min'],['pullWide','5-9min'],['pullNeutral','9-13min'],['pullChin','13-17min'],['seatRow','17-35min'],['standRow','35-47min'],['ropeCurl','47-62min'],['coreA','62-72min·三选一'],['coreB','62-72min·三选一'],['coreC','62-72min·三选一'],['burpee','72-84min'],['stairs','84-104min'],['bikeInt','104-129min'],['latStretch','129-135min']],
-  3:[['incline','0-45min'],['warmup','45-53min'],['hipAbd','53-70min'],['legPress','70-88min'],['hackSquat','88-105min'],['coreA','105-115min·三选一'],['coreB','105-115min·三选一'],['coreC','105-115min·三选一']],
+  3:[['incline','0-45min'],['warmup','45min起·私教开始'],['hipAbd','课内①·顺序教练定'],['legPress','课内②'],['hackSquat','课内③'],['bridge','课内④'],['bgs','课内⑤'],['coreA','课后·三选一'],['coreB','课后·三选一'],['coreC','课后·三选一'],['pigeon','课后·每侧20-30秒×2']],
   4:[['warmup','0-8min'],['pushup','8-16min'],['triceps','16-31min'],['dbTriceps','31-56min'],['burpee','56-68min'],['mountain','68-74min'],['coreA','74-86min·三选一'],['coreB','74-86min·三选一'],['coreC','74-86min·三选一'],['bike45','86-131min']],
-  5:[['warmup','0-8min'],['pullWide','8-15min'],['pullNeutral','15-22min'],['pullChin','22-29min'],['seatRow','29-50min'],['coreA','50-60min·三选一'],['coreB','50-60min·三选一'],['coreC','50-60min·三选一'],['bike45','60-105min'],['latStretch','105-120min']],
+  5:[['warmup','0-8min'],['pullWide','8-15min·2×15'],['pullNeutral','15-22min·2×12'],['pullChin','22-29min·2×12-15'],['seatRow','29-50min'],['coreA','50-60min·三选一'],['coreB','50-60min·三选一'],['coreC','50-60min·三选一'],['bike45','60-105min'],['latStretch','105-120min']],
   6:[['coreA','约8分钟·周末版3×45-60秒'],['coreB','约8分钟·周末版3×15'],['coreC','约8分钟·按C完成一套']],
   0:[['coreA','约8分钟·周末版3×45-60秒'],['coreB','约8分钟·周末版3×15'],['coreC','约8分钟·按C完成一套']]
 };
-const BACKUP_KEYS=['plankFree'];
+/* 自由课（独立可选，不固定日期，不与常规背课自动叠加） */
+const FREE_KEYS=['shoulderWarm','hangCore','crawlSide','crawlFB','hipJump','burpeeJump'];
 /* 身体部位主标题（周几为副标题） */
-const DAY_META={1:['肩','肩部私教 + 课后作业'],2:['背 + 二头','背部与手臂日'],3:['臀','臀腿日'],4:['胸 + 三头','胸部与手臂日'],5:['背','背部日'],6:['核心','周末轻核心'],0:['核心','周末轻核心']};
+const DAY_META={1:['肩','肩部私教 + 火箭蹲｜核心放进私教课'],2:['背 + 二头','背部自主训练① + 有氧体能'],3:['臀腿','爬坡 + 臀腿私教（含臀桥/保加利亚）'],4:['胸 + 三头','胸三头 + 体能 + 动态核心'],5:['背','背部私教② · 三握法引体'],6:['核心','周末轻核心'],0:['核心','周末轻核心']};
 /* 自定义动作：存 S.custom，key 形如 c_<id> */
 function getAction(key){
   if(ACTIONS[key])return ACTIONS[key];
@@ -764,6 +773,22 @@ function renderTrainList(){
       }).join('')
       +`</div></details>`;
   });
+  /* 自由课（独立可选，不固定日期） */
+  {
+    const dk=todayKey(),fdone=S.planDone[dk]||{};
+    html+=`<details class="card" style="padding:0 0 6px"><summary style="padding:12px 16px;cursor:pointer">
+      <span style="font-weight:800;font-size:18px">🎯 自由课</span>
+      <span style="color:var(--sub);font-size:13px"> 独立可选 · 不固定日期 · 不与背课叠加</span></summary>
+      <div style="padding:0 10px">`
+      +FREE_KEYS.map(k=>{
+        const a=ACTIONS[k],kd=!!fdone[k],badge=progBadge(a.cfg,(S.progress[dk]||{})[k]);
+        return `<div style="display:flex;align-items:center;gap:10px;margin:6px 0">
+          <span onclick="toggleDone('${k}','${dk}',event)" style="flex:none;width:32px;height:32px;border-radius:50%;border:2px solid ${kd?'var(--green)':'#cbd5e1'};background:${kd?'var(--green)':'transparent'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;cursor:pointer">${kd?'✓':''}</span>
+          <button class="train-card" style="flex:1;margin:0" onclick="startSession('${k}','${dk}')">
+            <div style="flex:1"><div class="tn">${a.icon} ${a.name}</div><div class="td">${a.spec||cfgDesc(a.cfg)}${badge?' · <b style="color:var(--green)">'+badge+'</b>':''}</div></div><div class="go">›</div></button></div>`;
+      }).join('')
+      +`</div></details>`;
+  }
   /* 自定义动作 */
   const cus=(S.custom||[]),dk=todayKey();
   html+=`<div class="card"><h2>⭐ 我的自定义动作</h2>`;
@@ -790,7 +815,7 @@ function renderTrainList(){
       <input id="cuSpec" placeholder="备注（可选）：重量、组数、注意事项" style="margin-bottom:8px">
       <button class="btn" style="width:100%" onclick="addCustomAction()">保存到我的动作</button>
     </div></details></div>`;
-  html+=`<div class="card"><h2>自选 / 补练</h2>${BACKUP_KEYS.map(k=>actionCard(k)).join('')}</div>`;
+  html+=`<div class="card"><h2>自选 / 补练</h2>${['plankFree'].map(k=>actionCard(k)).join('')}</div>`;
   $('#trainList').innerHTML=html;
 }
 function markDone(key,dk){
