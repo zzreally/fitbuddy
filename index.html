@@ -225,6 +225,15 @@ summary::-webkit-details-marker{display:none}
     <div class="field"><label>静息心率（手表「心脏」App 查看，也作为训练组间恢复判定基准）</label><input id="pRhr" type="number" inputmode="numeric"></div>
     <p class="small-note">TDEE（每日总消耗）= BMR + Watch 活动能量。Mifflin-St Jeor 公式估算 BMR，静息心率越低心肺越好、恢复越快，组间门槛默认用它参照。</p>
   </div>
+  <div class="card">
+    <h2>⚖️ 体重追踪</h2>
+    <div id="weightCard"></div>
+    <div class="row" style="gap:8px;margin-top:10px">
+      <input id="wNew" type="number" inputmode="decimal" placeholder="输入今天的体重 kg" style="flex:1">
+      <button class="btn" style="width:auto;padding:11px 18px" onclick="saveWeight()">记录</button>
+    </div>
+    <p class="small-note">第一次记录 = 初始体重；之后每次记录自动带日期，差值自动算。体重更新后 BMR 也跟着刷新。</p>
+  </div>
 </div>
 
 <!-- ========== 训练 ========== -->
@@ -610,6 +619,16 @@ $('#sexSeg').addEventListener('click',e=>{
     save();renderHome();
   });
 });
+/* 直接改体重字段 = 记一次体重（change 在失焦/回车时触发，不会打字就记） */
+$('#pWeight').addEventListener('change',()=>{
+  const v=parseFloat($('#pWeight').value);
+  if(!v||v<=0)return;
+  if(!S.weights)S.weights=[];
+  const last=S.weights[S.weights.length-1];
+  if(last&&last.w===Math.round(v*10)/10)return;
+  S.weights.push({w:Math.round(v*10)/10,date:todayKey(),ts:Date.now()});
+  save();renderWeight();
+});
 
 /* ================= URL 参数自动记录（配合 iOS 快捷指令） ================= */
 function handleURLParams(){
@@ -714,10 +733,9 @@ function actionCard(k,slot){
     <div style="flex:1"><div class="tn">${a.icon} ${a.name}</div><div class="td">${a.spec||cfgDesc(a.cfg)}${slot?' · <b>'+slot+'</b>':''}</div></div><div class="go">›</div></button>`;
 }
 function renderTrainList(){
-  const wd=new Date().getDay(),dk=todayKey();
-  S.planDone=S.planDone||{};
-  const done=S.planDone[dk]||{};
-  /* 今天排最前，其余 6 天全部显示，随时可补课 */
+  const wd=new Date().getDay();
+  S.planDone=S.planDone||{};S.progress=S.progress||{};
+  /* 今天排最前，其余 6 天全部显示，随时可补课；打卡/进度按「本周该训练日」的日期存，跨天看不会丢 */
   const order=[wd,1,2,3,4,5,6,0].filter((v,i,a)=>a.indexOf(v)===i);
   let html=`<div class="card" style="background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff">
     <h2 style="color:#fff;margin-bottom:4px">📅 全周课表 · 打卡制</h2>
@@ -725,6 +743,9 @@ function renderTrainList(){
   order.forEach(d=>{
     const plan=WEEK[d]||[];if(!plan.length)return;
     const isToday=d===wd;
+    const pd=weekDate(d);
+    const done=S.planDone[pd]||{};
+    const prog=S.progress[pd]||{};
     const dn=plan.filter(([k])=>done[k]).length;
     const allDone=dn===plan.length;
     html+=`<details ${isToday?'open':''} class="card" style="padding:0 0 6px;${isToday?'border:2px solid var(--acc)':''}">
@@ -735,15 +756,16 @@ function renderTrainList(){
       <div style="padding:0 10px">`
       +plan.map(([k,slot])=>{
         const a=getAction(k)||ACTIONS[k],kd=!!done[k];
+        const badge=progBadge(a.cfg,prog[k]);
         return `<div style="display:flex;align-items:center;gap:10px;margin:6px 0">
-          <span onclick="toggleDone('${k}','${dk}',event)" style="flex:none;width:32px;height:32px;border-radius:50%;border:2px solid ${kd?'var(--green)':'#cbd5e1'};background:${kd?'var(--green)':'transparent'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;cursor:pointer">${kd?'✓':''}</span>
-          <button class="train-card" style="flex:1;margin:0" onclick="startSession('${k}','${dk}')">
-            <div style="flex:1"><div class="tn">${a.icon} ${a.name}</div><div class="td">${a.spec||cfgDesc(a.cfg)}${slot?' · <b>'+slot+'</b>':''}</div></div><div class="go">›</div></button></div>`;
+          <span onclick="toggleDone('${k}','${pd}',event)" style="flex:none;width:32px;height:32px;border-radius:50%;border:2px solid ${kd?'var(--green)':'#cbd5e1'};background:${kd?'var(--green)':'transparent'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;cursor:pointer">${kd?'✓':''}</span>
+          <button class="train-card" style="flex:1;margin:0" onclick="startSession('${k}','${pd}')">
+            <div style="flex:1"><div class="tn">${a.icon} ${a.name}</div><div class="td">${a.spec||cfgDesc(a.cfg)}${slot?' · <b>'+slot+'</b>':''}${badge?' · <b style="color:var(--green)">'+badge+'</b>':''}</div></div><div class="go">›</div></button></div>`;
       }).join('')
       +`</div></details>`;
   });
   /* 自定义动作 */
-  const cus=(S.custom||[]);
+  const cus=(S.custom||[]),dk=todayKey();
   html+=`<div class="card"><h2>⭐ 我的自定义动作</h2>`;
   if(cus.length)html+=cus.map(cu=>{
     const a=getAction(cu.key),kd=!!done[cu.key];
@@ -776,6 +798,21 @@ function markDone(key,dk){
   if(!S.planDone[dk])S.planDone[dk]={};
   S.planDone[dk][key]=true;save();
 }
+/* 本周某训练日对应的日期（最近一次出现的那个周几，今天算） */
+function weekDate(d){
+  const n=new Date();let diff=n.getDay()-d;if(diff<0)diff+=7;
+  const dt=new Date(n.getFullYear(),n.getMonth(),n.getDate()-diff);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+/* 动作进度徽标（未完成显示做到哪了，完成过显示记录次数） */
+function progBadge(c,p){
+  if(!p)return '';
+  if(p.records&&p.records.length)return `${p.records.length} 次记录 ✓`;
+  if(c.type==='count'&&p.setsDone&&p.setsDone.length)return sumArr(p.setsDone)+(p.reps?('+'+p.reps):'')+' 个';
+  if(c.type==='timer'&&p.times&&p.times.length)return p.times.length+' 组';
+  if(c.type==='alt')return ((p.legL||0)+(p.legR||0)+(p.setRep||0))+' 个';
+  return '';
+}
 function toggleDone(key,dk,ev){
   ev.stopPropagation();ev.preventDefault();
   if(!S.planDone[dk])S.planDone[dk]={};
@@ -807,11 +844,24 @@ function startSession(key,planDate){
   const a=getAction(key);
   if(!a){toast('动作不存在');return}
   const c=a.cfg;
-  Sess={key,name:a.name,icon:a.icon,spec:a.spec,cfg:c,leg:'L',legL:0,legR:0,setRep:0,
-    reps:0,setsDone:[],times:[],startTs:0,restStart:0,timerOn:false,sessionStart:Date.now(),targetHit:false,
-    planDate:planDate||todayKey()};
+  planDate=planDate||todayKey();
+  if(!S.progress)S.progress={};
+  if(!S.progress[planDate])S.progress[planDate]={};
+  let prog=S.progress[planDate][key];
+  if(!prog){prog={leg:'L',legL:0,legR:0,setRep:0,reps:0,setsDone:[],times:[],records:[]};S.progress[planDate][key]=prog}
+  const resume=prog.reps>0||prog.setRep>0||prog.setsDone.length>0||prog.times.length>0;
+  Sess={key,name:a.name,icon:a.icon,spec:a.spec,cfg:c,leg:prog.leg,legL:prog.legL,legR:prog.legR,setRep:prog.setRep,
+    reps:prog.reps,setsDone:prog.setsDone,times:prog.times,prog,
+    startTs:0,restStart:0,timerOn:false,sessionStart:Date.now(),targetHit:false,planDate};
   $('#trainList').style.display='none';$('#trainSession').style.display='block';
   renderSession();
+  if(resume)toast('📌 已恢复上次进度，接着练');
+}
+/* 会话数据实时写回进度存档（退出重进不丢） */
+function syncProg(){
+  const s=Sess;if(!s)return;
+  Object.assign(s.prog,{leg:s.leg,legL:s.legL,legR:s.legR,setRep:s.setRep,reps:s.reps,setsDone:s.setsDone,times:s.times});
+  save();
 }
 function backToList(){
   if(workTimer)clearInterval(workTimer);
@@ -819,10 +869,25 @@ function backToList(){
   $('#trainList').style.display='block';$('#trainSession').style.display='none';
   renderTrainLog();renderHome();
 }
+/* 历史记录区（进度条下方，可删多余记录） */
+function recordsHtml(s){
+  if(!s.prog.records.length)return '';
+  return `<div class="card" style="padding:10px 14px">
+    <div style="font-size:13px;color:var(--sub);margin-bottom:4px">本动作已完成记录（点 ✕ 删除记错的）</div>
+    ${s.prog.records.map((r,i)=>`<div class="workout-log-item" style="display:flex;align-items:center">${r.detail}<span style="margin-left:auto;color:var(--sub);font-size:12px">${r.date||''}</span><button class="del" onclick="delRec(${i})">✕</button></div>`).join('')}
+  </div>`;
+}
+function delRec(i){
+  const s=Sess;
+  s.prog.records.splice(i,1);
+  if(!s.prog.records.length&&S.planDone[s.planDate])delete S.planDone[s.planDate][s.key];
+  save();renderSession();
+}
 function renderSession(){
   const s=Sess,c=s.cfg;let html='';
   html+=`<div class="row between" style="margin-bottom:10px"><button class="btn ghost" style="width:auto" onclick="backToList()">‹ 返回</button><b style="font-size:18px">${s.icon} ${s.name}</b><span style="width:64px"></span></div>`;
   if(s.spec)html+=`<div class="card" style="background:var(--chip);padding:12px 16px"><p class="small-note" style="margin:0;font-size:13px;color:var(--ink)">📋 ${s.spec}</p></div>`;
+  html+=recordsHtml(s);
 
   if(c.type==='free'){ /* 自由记录：私教课/拉伸/复杂组合 */
     html+=`<div class="card" style="text-align:center;padding:30px 16px">
@@ -901,20 +966,20 @@ function repOne(){
   if(c.type==='alt'){
     s.setRep++;
     if(s.setRep>=c.repsPerSet)finishSet(true);
-    else renderSession();
+    else{syncProg();renderSession()}
   }
   else{
     s.reps++;
     const perMax=c.perSet||c.perSetMax||c.total||99;
     if(s.reps>=perMax&&(c.perSet||c.perSetMax)){finishSet(true)}
-    else renderSession();
+    else{syncProg();renderSession()}
   }
 }
 function undoOne(){
   const s=Sess,c=s.cfg;
   if(c.type==='alt'){if(s.setRep>0)s.setRep--;}
   else if(s.reps>0)s.reps--;
-  renderSession();
+  syncProg();renderSession();
 }
 /* 手输数字一键填入（输错可直接输正确数覆盖） */
 function fillReps(){
@@ -923,11 +988,11 @@ function fillReps(){
   if(isNaN(v)||v<0){toast('输个数（0 也行）');return}
   if(c.type==='alt'){
     s.setRep=v;
-    if(v>=c.repsPerSet){$('#manualReps').value='';finishSet(true)}else renderSession();
+    if(v>=c.repsPerSet){$('#manualReps').value='';finishSet(true)}else{syncProg();renderSession()}
   }else{
     s.reps=v;
     const perMax=c.perSet||c.perSetMax||0;
-    if(perMax&&v>=perMax){$('#manualReps').value='';finishSet(true)}else renderSession();
+    if(perMax&&v>=perMax){$('#manualReps').value='';finishSet(true)}else{syncProg();renderSession()}
   }
 }
 /* 有氧手动填分钟 */
@@ -936,7 +1001,7 @@ function fillMin(){
   const v=parseInt($('#manualMin').value,10);
   if(isNaN(v)||v<=0){toast('输个分钟数');return}
   s.times=[v*60];s.targetHit=true;
-  finishSession(true);
+  syncProg();finishSession(true);
 }
 /* 没空数了：按课表计划直接整项记完成 */
 function finishAllPerPlan(){
@@ -969,7 +1034,7 @@ function finishSet(auto){
     s.reps=0;
     if((c.sets&&s.setsDone.length>=c.sets)||(c.total&&sumArr(s.setsDone)>=c.total)){finishSession();return}
   }
-  if(c.hrGate&&c.hrGate>0)openHRGate();else{renderSession();toast(c.restNote||'休息一下，下一组！')}
+  if(c.hrGate&&c.hrGate>0)openHRGate();else{syncProg();renderSession();toast(c.restNote||'休息一下，下一组！')}
 }
 function startPlank(){
   const s=Sess;s.timerOn=true;s.startTs=Date.now();s.targetHit=false;reqWake();
@@ -985,7 +1050,7 @@ function stopPlank(){
   const s=Sess,c=s.cfg;
   clearInterval(workTimer);workTimer=null;
   const dur=Math.round((Date.now()-s.startTs)/1000);
-  s.timerOn=false;s.times.push(dur);relWake();
+  s.timerOn=false;s.times.push(dur);relWake();syncProg();
   if(c.targetMin||s.times.length>=c.sets){finishSession();return}
   if(c.hrGate>0)openHRGate();else{renderSession();toast('第 '+dur+' 秒完成！'+(c.restNote||'休息一下'))}
 }
@@ -993,7 +1058,8 @@ function finishFree(){
   const s=Sess;
   const d=day(todayKey());
   d.workouts.push({name:s.name,icon:s.icon,total:'✓',detail:s.spec||'已完成',ts:Date.now(),durMin:Math.round((Date.now()-s.sessionStart)/60000)});
-  markDone(s.key,s.planDate);
+  s.prog.records.push({detail:s.spec||'已完成 ✓',date:todayKey().slice(5)});
+  markDone(s.key,s.planDate);syncProg();
   save();backToList();
   toast('✅ '+s.name+' 已记录并打卡');
 }
@@ -1027,13 +1093,49 @@ function finishSession(){
   }
   else{total=sumArr(s.setsDone)+(s.reps>0?s.reps:0);detail=`${s.setsDone.length} 组，共 ${total} 个`}
   d.workouts.push({name:s.name,icon:s.icon,total,detail,ts:Date.now(),durMin:Math.round((Date.now()-s.sessionStart)/60000)});
-  markDone(s.key,s.planDate);
+  /* 留档：完成记录写进该动作的记录列表（可删除），打卡自动勾上，然后清零开始新一轮 */
+  s.prog.records.push({detail:detail+' ✓',date:todayKey().slice(5)});
+  s.leg='L';s.legL=0;s.legR=0;s.setRep=0;s.reps=0;s.setsDone=[];s.times=[];
+  markDone(s.key,s.planDate);syncProg();
   save();backToList();
   toast(`✅ ${s.name} 完成！${detail}`);
 }
 function renderTrainLog(){
   const w=day(todayKey()).workouts;
-  $('#trainLogList').innerHTML=w.length?w.map(x=>`<div class="workout-log-item">${x.icon} <b>${x.name}</b> · ${x.detail}${x.durMin?' · 约'+x.durMin+'分钟':''}</div>`).join(''):'<p class="small-note" style="margin:0">今天还没练，选一个动作开练 💪</p>';
+  $('#trainLogList').innerHTML=w.length?w.map(x=>`<div class="workout-log-item" style="display:flex;align-items:center"><span style="flex:1">${x.icon} <b>${x.name}</b> · ${x.detail}${x.durMin?' · 约'+x.durMin+'分钟':''}</span><button class="del" onclick="delWorkout(${x.ts})">✕</button></div>`).join(''):'<p class="small-note" style="margin:0">今天还没练，选一个动作开练 💪</p>';
+}
+function delWorkout(ts){
+  const d=day(todayKey());
+  d.workouts=d.workouts.filter(x=>x.ts!==ts);
+  save();renderTrainLog();renderHome();
+}
+/* ================= 体重追踪 ================= */
+function saveWeight(){
+  const v=parseFloat($('#wNew').value);
+  if(!v||v<=0||v>300){toast('输个体重（kg）');return}
+  if(!S.weights)S.weights=[];
+  if(S.weights.length&&S.weights[S.weights.length-1].w===v){toast('和上次一样，没变');return}
+  S.weights.push({w:Math.round(v*10)/10,date:todayKey(),ts:Date.now()});
+  S.profile.weight=Math.round(v*10)/10;
+  save();$('#wNew').value='';
+  renderWeight();renderHome();renderBurn();
+  toast('✅ 体重已记录 '+v+' kg');
+}
+function renderWeight(){
+  if(!S.weights)S.weights=[];
+  const el=$('#weightCard');if(!el)return;
+  if(!S.weights.length){
+    el.innerHTML='<p class="small-note" style="margin:0">还没记录体重，第一次记录将作为初始体重</p>';return;
+  }
+  const st=S.weights[0],cur=S.weights[S.weights.length-1];
+  const diff=Math.round((cur.w-st.w)*10)/10;
+  const diffTxt=diff===0?'±0':(diff>0?'+':'')+diff;
+  const diffColor=diff<0?'var(--green)':(diff>0?'var(--red)':'var(--sub)');
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;text-align:center">
+    <div style="flex:1"><div style="font-size:12px;color:var(--sub)">初始</div><div style="font-size:22px;font-weight:800">${st.w}<span style="font-size:13px">kg</span></div><div style="font-size:11px;color:var(--sub)">${st.date.slice(5)}</div></div>
+    <div style="flex:1;border-left:1px dashed var(--line);border-right:1px dashed var(--line)"><div style="font-size:12px;color:var(--sub)">当前</div><div style="font-size:22px;font-weight:800;color:var(--acc)">${cur.w}<span style="font-size:13px">kg</span></div><div style="font-size:11px;color:var(--sub)">${cur.date.slice(5)} · 自动</div></div>
+    <div style="flex:1"><div style="font-size:12px;color:var(--sub)">差值</div><div style="font-size:22px;font-weight:800;color:${diffColor}">${diffTxt}<span style="font-size:13px">kg</span></div><div style="font-size:11px;color:var(--sub)">共 ${S.weights.length} 次记录</div></div>
+  </div>`;
 }
 
 /* ================= 历史 ================= */
@@ -1072,7 +1174,7 @@ function switchView(id){
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===id));
   $('#'+id).classList.add('on');
   if(id==='v-diet'){renderDiet();$('#foodSearch').focus()}
-  if(id==='v-burn')renderBurn();
+  if(id==='v-burn'){renderBurn();renderWeight()}
   if(id==='v-train')renderTrainLog();
   if(id==='v-hist')renderHist();
 }
@@ -1082,7 +1184,7 @@ load();
 if(!S.days[todayKey()])day(todayKey());
 settle(true);
 handleURLParams();
-renderHome();renderDiet();renderBurn();renderTrainList();renderTrainLog();renderHist();renderMealChips();renderHand();
+renderHome();renderDiet();renderBurn();renderTrainList();renderTrainLog();renderHist();renderMealChips();renderHand();renderWeight();
 
 /* SW 注册（离线可用） */
 if('serviceWorker' in navigator){
