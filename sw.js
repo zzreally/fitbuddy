@@ -1,4 +1,4 @@
-const CACHE = 'fitbuddy-v10';
+const CACHE = 'fitbuddy-v11';
 const ASSETS = ['index.html', 'manifest.json'];
 
 self.addEventListener('install', e => {
