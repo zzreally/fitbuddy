@@ -229,10 +229,11 @@ summary::-webkit-details-marker{display:none}
     <h2>⚖️ 体重追踪</h2>
     <div id="weightCard"></div>
     <div class="row" style="gap:8px;margin-top:10px">
-      <input id="wNew" type="number" inputmode="decimal" placeholder="输入今天的体重 kg" style="flex:1">
+      <input id="wDate" type="date" style="flex:none;width:138px;font-size:14px;padding:10px">
+      <input id="wNew" type="number" inputmode="decimal" placeholder="体重 kg" style="flex:1">
       <button class="btn" style="width:auto;padding:11px 18px" onclick="saveWeight()">记录</button>
     </div>
-    <p class="small-note">第一次记录 = 初始体重；之后每次记录自动带日期，差值自动算。体重更新后 BMR 也跟着刷新。</p>
+    <p class="small-note">日期不选=今天。第一次记录=初始体重；点初始日期旁的 ✎ 可修正历史日期。体重更新后 BMR 也跟着刷新。</p>
   </div>
 </div>
 
@@ -416,7 +417,11 @@ const FOODS=[
 ["紫薯 1个",170],["土豆 1个",115],["白粥 1碗",115],["小米粥 1碗",120],["皮蛋瘦肉粥 1碗",350],["八宝粥 1碗",230],
 ["汉堡 1个",550],["巨无霸 1个",550],["麦辣鸡腿堡 1个",570],["板烧鸡腿堡 1个",520],["薯条 中份",330],["鸡翅 1个",120],
 ["炸鸡 1块",350],["鸡米花 中份",350],["披萨 2块",570],["卷饼 1个",450],["肉夹馍 1个",450],["煎饼果子 1套",450],
-["手抓饼 1个",400],["鸡蛋灌饼 1个",420],["三明治 1份",350],["沙拉(含酱) 1份",250],["牛排 1份",450],["意面 1份",550],
+["手抓饼 1个",400],["鸡蛋灌饼 1个",420],["馅饼(猪肉) 1个",300],["牛肉馅饼 1个",280],["香河肉饼 1张(约200g)",550],
+["油饼 1个",400],["葱油饼 1个",300],["烙饼 1张(100g)",255],["千层饼 1块",250],["酱香饼 1块",230],
+["鸡蛋饼 1个",280],["韭菜盒子 1个",280],["菜盒子 1个",250],["芝麻烧饼 1个",280],["糖饼 1个",300],
+["锅贴 5个",350],["馄饨 1碗(10个)",400],["馄饨 1个",40],["疙瘩汤 1碗",250],["肉龙 1个",350],
+["豆沙包 1个",210],["奶黄包 1个",200],["三明治 1份",350],["沙拉(含酱) 1份",250],["牛排 1份",450],["意面 1份",550],
 ["奶油意面 1份",700],["咖喱饭 1份",650],["猪排饭 1份",700],["鸡腿饭 1份",650],["黄焖鸡米饭 1份",750],
 ["麻辣烫 1碗",700],["冒菜 1碗",650],["麻辣香锅 1份",900],["水煮鱼 1份",900],["鱼香肉丝盖饭 1份",700],
 ["宫保鸡丁盖饭 1份",700],["红烧肉盖饭 1份",800],["番茄炒蛋盖饭 1份",600],["青椒肉丝盖饭 1份",650],["回锅肉盖饭 1份",750],
@@ -431,7 +436,13 @@ const FOODS=[
 ["胡萝卜 100g",39],["冬瓜 100g",12],["丝瓜 100g",20],["豆芽 100g",18],["豆腐 100g",82],["豆腐皮 100g",260],
 ["腐竹 100g",460],["千张 100g",300],["豆干 100g",180],["毛豆 100g",130],["玉米粒 100g",110],["蘑菇 100g",25],
 ["香菇 100g",30],["金针菇 100g",32],["杏鲍菇 100g",35],["木耳(水发) 100g",27],["海带 100g",15],
+["西蓝花 1颗(约300g)",110],["胡萝卜 1根(约150g)",60],["白萝卜 100g",21],["山药 100g",57],["南瓜 100g",23],
+["莲藕 100g",47],["荷兰豆 100g",34],["四季豆 100g",31],["西葫芦 100g",19],["秋葵 100g",37],
+["芦笋 100g",22],["紫甘蓝 100g",25],["娃娃菜 100g",14],["油菜 100g",25],["茼蒿 100g",24],
+["彩椒 100g",26],["圣女果 10颗",45],["蒜苔 100g",66],["花菜 100g",26],
 ["清炒时蔬 1份",120],["蒜蓉青菜 1份",130],["白灼菜心 1份",80],["凉拌黄瓜 1份",60],["番茄炒蛋 1份",200],
+["蒜蓉西兰花 1份",150],["麻婆豆腐 1份",350],["地三鲜 1份",300],["干煸豆角 1份",280],["醋溜土豆丝 1份",220],
+["红烧茄子 1份",350],["韭菜炒蛋 1份",250],["青椒炒肉 1份",300],["土豆炖牛肉 1份",450],["冬瓜排骨汤 1碗",180],
 ["清蒸鱼 1条",320],["白灼虾 1份",120],["苹果 1个",95],["香蕉 1根",105],["橙子 1个",70],["橘子 1个",45],
 ["柚子 2瓣",60],["葡萄 10粒",40],["提子 10粒",50],["西瓜 1大块",90],["哈密瓜 1块",100],["芒果 1个",200],
 ["菠萝 100g",44],["草莓 5颗",25],["蓝莓 1盒",70],["猕猴桃 1个",60],["火龙果 半个",100],["榴莲 1块",150],
@@ -1138,26 +1149,42 @@ function delWorkout(ts){
 function saveWeight(){
   const v=parseFloat($('#wNew').value);
   if(!v||v<=0||v>300){toast('输个体重（kg）');return}
+  const date=$('#wDate').value||todayKey();
   if(!S.weights)S.weights=[];
-  if(S.weights.length&&S.weights[S.weights.length-1].w===v){toast('和上次一样，没变');return}
-  S.weights.push({w:Math.round(v*10)/10,date:todayKey(),ts:Date.now()});
+  S.weights.push({w:Math.round(v*10)/10,date,ts:Date.now()});
+  S.weights.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.ts||0)-(b.ts||0));
   S.profile.weight=Math.round(v*10)/10;
-  save();$('#wNew').value='';
+  save();$('#wNew').value='';$('#wDate').value='';
   renderWeight();renderHome();renderBurn();
-  toast('✅ 体重已记录 '+v+' kg');
+  toast('✅ 体重已记录 '+v+' kg'+(date!==todayKey()?'（'+date+'）':''));
+}
+function editInitWeight(){
+  if(!S.weights||!S.weights.length)return;
+  const st=S.weights[0];
+  const nd=prompt('修正初始体重日期（格式 2026-11-01）',st.date);
+  if(nd===null)return;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(nd)){toast('日期格式：2026-11-01');return}
+  const nw=prompt('初始体重 kg（可直接确认）',st.w);
+  if(nw===null)return;
+  const v=parseFloat(nw);
+  if(!v||v<=0){toast('体重无效，未修改');return}
+  S.weights[0]={w:Math.round(v*10)/10,date:nd,ts:st.ts||Date.now()};
+  S.weights.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.ts||0)-(b.ts||0));
+  save();renderWeight();renderHome();renderBurn();
+  toast('✅ 初始记录已修正');
 }
 function renderWeight(){
   if(!S.weights)S.weights=[];
   const el=$('#weightCard');if(!el)return;
   if(!S.weights.length){
-    el.innerHTML='<p class="small-note" style="margin:0">还没记录体重，第一次记录将作为初始体重</p>';return;
+    el.innerHTML='<p class="small-note" style="margin:0">还没记录体重，第一次记录将作为初始体重（日期可手动选）</p>';return;
   }
   const st=S.weights[0],cur=S.weights[S.weights.length-1];
   const diff=Math.round((cur.w-st.w)*10)/10;
   const diffTxt=diff===0?'±0':(diff>0?'+':'')+diff;
   const diffColor=diff<0?'var(--green)':(diff>0?'var(--red)':'var(--sub)');
   el.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;text-align:center">
-    <div style="flex:1"><div style="font-size:12px;color:var(--sub)">初始</div><div style="font-size:22px;font-weight:800">${st.w}<span style="font-size:13px">kg</span></div><div style="font-size:11px;color:var(--sub)">${st.date.slice(5)}</div></div>
+    <div style="flex:1"><div style="font-size:12px;color:var(--sub)">初始 <span onclick="editInitWeight()" style="cursor:pointer;text-decoration:none">✎</span></div><div style="font-size:22px;font-weight:800">${st.w}<span style="font-size:13px">kg</span></div><div style="font-size:11px;color:var(--sub)">${st.date.slice(5)}</div></div>
     <div style="flex:1;border-left:1px dashed var(--line);border-right:1px dashed var(--line)"><div style="font-size:12px;color:var(--sub)">当前</div><div style="font-size:22px;font-weight:800;color:var(--acc)">${cur.w}<span style="font-size:13px">kg</span></div><div style="font-size:11px;color:var(--sub)">${cur.date.slice(5)} · 自动</div></div>
     <div style="flex:1"><div style="font-size:12px;color:var(--sub)">差值</div><div style="font-size:22px;font-weight:800;color:${diffColor}">${diffTxt}<span style="font-size:13px">kg</span></div><div style="font-size:11px;color:var(--sub)">共 ${S.weights.length} 次记录</div></div>
   </div>`;
