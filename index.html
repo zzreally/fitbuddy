@@ -263,8 +263,11 @@ summary::-webkit-details-marker{display:none}
     <h2>设置</h2>
     <div class="row">
       <button class="btn ghost" onclick="exportData()">导出数据(JSON)</button>
+      <button class="btn ghost" onclick="document.getElementById('importFile').click()">导入数据</button>
       <button class="btn danger" onclick="resetAll()">清空全部数据</button>
     </div>
+    <input id="importFile" type="file" accept=".json,application/json" style="display:none" onchange="importData(this)">
+    <p class="small-note">导入会覆盖当前所有数据（建议先导出一份再导入）。支持导入本 App 导出的 JSON 文件。</p>
   </div>
 </div>
 
@@ -1208,6 +1211,21 @@ function renderHist(){
 function exportData(){
   const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fitbuddy-'+todayKey()+'.json';a.click();
+}
+function importData(input){
+  const file=input.files&&input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    let data;
+    try{data=JSON.parse(reader.result)}catch(e){toast('❌ 不是有效的 JSON 文件');return}
+    if(!data||typeof data!=='object'||!data.days||!data.profile){toast('❌ 文件格式不对，请用本 App 导出的 JSON');return}
+    if(!confirm('导入将覆盖当前全部数据（确认当前数据已备份）。确定导入 '+Object.keys(data.days).length+' 天记录吗？'))return;
+    localStorage.setItem(K,JSON.stringify(data));
+    location.reload();
+  };
+  reader.readAsText(file);
+  input.value='';
 }
 function resetAll(){
   if(confirm('确定清空所有数据？不可恢复！')){localStorage.removeItem(K);location.reload()}
