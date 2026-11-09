@@ -322,7 +322,12 @@ function load(){
   if(!S.favs)S.favs=[];
   if(!S.cycle)S.cycle={accum:0,done:0};
   if(!S.planDone)S.planDone={};
-  if(!S.custom)S.custom=[];
+  if(!S.progress)S.progress={};
+  if(!S.weights)S.weights=[];
+  S.custom=(S.custom||[]).filter(c=>c&&c.name);
+  S.custom.forEach((c,i)=>{if(!c.key)c.key='c_'+Date.now()+'_'+i});
+  /* 老版本数据迁移：planDone 里的旧日期键保留，days 补齐字段 */
+  Object.keys(S.days||{}).forEach(k=>{const d=S.days[k];if(!d.meals)d.meals=[];if(!d.workouts)d.workouts=[];if(isNaN(d.watch))d.watch=0});
 }
 const save=()=>localStorage.setItem(K,JSON.stringify(S));
 const day=t=>{if(!S.days[t])S.days[t]={meals:[],watch:0,workouts:[]};return S.days[t]};
@@ -756,6 +761,7 @@ function actionCard(k,slot){
     <div style="flex:1"><div class="tn">${a.icon} ${a.name}</div><div class="td">${a.spec||cfgDesc(a.cfg)}${slot?' · <b>'+slot+'</b>':''}</div></div><div class="go">›</div></button>`;
 }
 function renderTrainList(){
+try{
   const wd=new Date().getDay();
   S.planDone=S.planDone||{};S.progress=S.progress||{};
   /* 今天排最前，其余 6 天全部显示，随时可补课；打卡/进度按「本周该训练日」的日期存，跨天看不会丢 */
@@ -806,8 +812,10 @@ function renderTrainList(){
   /* 自定义动作 */
   const cus=(S.custom||[]),dk=todayKey();
   html+=`<div class="card"><h2>⭐ 我的自定义动作</h2>`;
-  if(cus.length)html+=cus.map(cu=>{
-    const a=getAction(cu.key),kd=!!done[cu.key];
+  if(cus.length)html+=cus.filter(cu=>cu&&cu.name).map(cu=>{
+    if(!cu.key)cu.key='c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    const a=getAction(cu.key)||{name:cu.name,icon:'⭐',spec:cu.spec||'完成打勾',cfg:{type:'free'}};
+    const kd=!!((S.planDone[dk]||{})[cu.key]);
     return `<div style="display:flex;align-items:center;gap:10px;margin:6px 0">
       <span onclick="toggleDone('${cu.key}','${dk}',event)" style="flex:none;width:32px;height:32px;border-radius:50%;border:2px solid ${kd?'var(--green)':'#cbd5e1'};background:${kd?'var(--green)':'transparent'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;cursor:pointer">${kd?'✓':''}</span>
       <button class="train-card" style="flex:1;margin:0" onclick="startSession('${cu.key}','${dk}')">
@@ -831,6 +839,10 @@ function renderTrainList(){
     </div></details></div>`;
   html+=`<div class="card"><h2>自选 / 补练</h2>${['plankFree'].map(k=>actionCard(k)).join('')}</div>`;
   $('#trainList').innerHTML=html;
+}catch(e){
+  console.error('[fitbuddy] renderTrainList',e);
+  $('#trainList').innerHTML='<div class="card"><h2>⚠️ 课表加载出错</h2><p class="small-note">'+(e&&e.message||e)+'</p><p class="small-note">你的训练数据没有丢，请把这句话截图发给开发者即可修复。</p></div>';
+}
 }
 function markDone(key,dk){
   dk=dk||todayKey();
@@ -1254,7 +1266,10 @@ load();
 if(!S.days[todayKey()])day(todayKey());
 settle(true);
 handleURLParams();
-renderHome();renderDiet();renderBurn();renderTrainList();renderTrainLog();renderHist();renderMealChips();renderHand();renderWeight();
+const safe=(fn,name)=>{try{fn()}catch(e){console.error('[fitbuddy]',name,e);}};
+safe(()=>renderHome(),'home');safe(()=>renderDiet(),'diet');safe(()=>renderBurn(),'burn');
+safe(()=>renderTrainList(),'train');safe(()=>renderTrainLog(),'trainlog');safe(()=>renderHist(),'hist');
+safe(()=>renderMealChips(),'meals');safe(()=>renderHand(),'hand');safe(()=>renderWeight(),'weight');
 
 /* SW 注册（离线可用） */
 if('serviceWorker' in navigator){
